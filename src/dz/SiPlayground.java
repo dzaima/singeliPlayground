@@ -20,7 +20,7 @@ public class SiPlayground extends NodeWindow {
   public Path exec = Paths.get("exec/");
   
   private final CodeAreaNode code;
-  private final Node varsNode;
+  private final VarList varsNode;
   private final CodeAreaNode noteNode;
   public final Vec<Var> vars = new Vec<>();
   
@@ -59,7 +59,7 @@ public class SiPlayground extends NodeWindow {
       return value!=0;
     });
     code.um.popIgnore(i);
-    varsNode = base.ctx.id("vars");
+    varsNode = (VarList) base.ctx.id("vars");
     updVars();
   }
   
@@ -271,15 +271,21 @@ public class SiPlayground extends NodeWindow {
       System.out.println("Usage: ./run cbqn path/to/Singeli");
       return;
     }
+    // Windows.setManager(Windows.Manager.JWM);
     Windows mgr = new Windows();
     GConfig gc = GConfig.newConfig();
     gc.addCfg(() -> Tools.readRes("siPlayground.dzcfg"));
     BaseCtx ctx = Ctx.newCtx();
     ctx.put("varfield", VarField::new);
+    ctx.put("varlist", VarList::new);
     SiPlayground w = new SiPlayground(gc, ctx, gc.getProp("si.ui").gr(), args[0], Paths.get(args[1]));
     mgr.start(w);
     
     mgr.waitFor();
+  }
+  
+  public void resized() {
+    if (varsNode!=null) varsNode.mResize();
   }
   
   public boolean key(Key key, int scancode, KeyAction a) {
@@ -292,6 +298,8 @@ public class SiPlayground extends NodeWindow {
         createTools();
         return true;
       }
+      if (key.onlyCtrl() && key.k_add()   && key.onKeypad()) { gc.setEM(gc.em+1); return true; }
+      if (key.onlyCtrl() && key.k_minus() && key.onKeypad()) { gc.setEM(gc.em-1); return true; }
     }
     return super.key(key, scancode, a);
   }

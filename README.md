@@ -6,3 +6,5 @@
 2. `./run cbqn path/to/Singeli`
 
 Code before `⍎` appears outside any scope, thus can be imports/exports/generators. After `⍎`, the code will be placed inside a function that reads stored variables and stores updated ones.
+
+ctrl+numpadPlus/ctrl+numpadMinus to change interface scale.

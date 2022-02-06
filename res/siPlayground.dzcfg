@@ -8,7 +8,7 @@ si {
     hsep{x=0em y=0em}
     pad { l=0.5em u=0.5em
       scroll { x=off
-        v { pad=.7em h=min w=820px
+        varlist { pad=.7em
           id=vars
         }
       }
