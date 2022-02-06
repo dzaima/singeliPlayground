@@ -1,0 +1,41 @@
+si {
+  ui = h { bg=bg.back
+    v {
+      scroll { bg=bg.bg1 codearea { id=code family="DejaVu Sans Mono" padLns=20 } }
+      vsep{x=0em y=0em}
+      scroll { codearea { id=note family="DejaVu Sans Mono" numbering=false } weight=0.4 }
+    }
+    hsep{x=0em y=0em}
+    pad { l=0.5em u=0.5em
+      scroll { x=off
+        v { pad=.7em h=min w=820px
+          id=vars
+        }
+      }
+    }
+  }
+  
+  numUI = scroll { y=off x=hidden varfield { family="DejaVu Sans Mono" radius=0em id=field } }
+  
+  vlUI = v { pad=0.2em
+    h { alY=bottom
+        text { id=name family="DejaVu Sans Mono"}
+        h { pad=0.3em id=btns alX=right }
+    }
+  }
+  
+  hlUI = h { pad=0.2em
+    btn { id=ty
+      text { id=tyTxt family="DejaVu Sans Mono" "?" }
+    }
+    id=list
+  }
+}
+
+coloredBtn {
+  bgDef = #444449
+  bgGreen = #375E33
+  borderLDef = #4B4B4F
+  borderLGreen = #416D36
+}
+btn { style=rect }
