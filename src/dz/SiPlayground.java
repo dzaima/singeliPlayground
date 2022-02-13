@@ -164,7 +164,8 @@ public class SiPlayground extends NodeWindow {
       }
       
       // generate variable I/O
-      StringBuilder cWrite = new StringBuilder();
+      String sep = "<singeli playground stdout separator>";
+      StringBuilder cWrite = new StringBuilder("  printf(\""+sep+"\");\n");
       StringBuilder siWrites = new StringBuilder();
       boolean first = true;
       for (Var v : vars) {
@@ -209,7 +210,13 @@ public class SiPlayground extends NodeWindow {
       // execute actual thing & read results
       Process exec = Runtime.getRuntime().exec(new String[]{outFile});
       String out = new String(exec.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-      String[] outVars = Tools.split(out, '\n');
+      String[] outParts = out.split(sep);
+      if (outParts.length!=2) {
+        notes.append("Bad stdout:\n");
+        notes.append(out);
+        break build;
+      }
+      String[] outVars = Tools.split(outParts[1], '\n');
       int ec = exec.waitFor();
       if (ec!=0) {
         notes.append("Execution stopped with exit code ").append(ec).append("\n");
@@ -227,6 +234,7 @@ public class SiPlayground extends NodeWindow {
         v.updData();
       }
       updVars();
+      notes.append(outParts[0]);
       
     } catch (Exception e) {
       notes.append("Failed building:\n");
