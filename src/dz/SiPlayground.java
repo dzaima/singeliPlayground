@@ -275,21 +275,20 @@ public class SiPlayground extends NodeWindow {
   }
   
   public static void main(String[] args) {
+    // Windows.setManager(Windows.Manager.JWM);
     if (args.length!=2) {
       System.out.println("Usage: ./run cbqn path/to/Singeli");
       return;
     }
-    // Windows.setManager(Windows.Manager.JWM);
-    Windows mgr = new Windows();
-    GConfig gc = GConfig.newConfig();
-    gc.addCfg(() -> Tools.readRes("siPlayground.dzcfg"));
-    BaseCtx ctx = Ctx.newCtx();
-    ctx.put("varfield", VarField::new);
-    ctx.put("varlist", VarList::new);
-    SiPlayground w = new SiPlayground(gc, ctx, gc.getProp("si.ui").gr(), args[0], Paths.get(args[1]));
-    mgr.start(w);
-    
-    mgr.waitFor();
+    Windows.start(mgr -> {
+      GConfig gc = GConfig.newConfig();
+      gc.addCfg(() -> Tools.readRes("siPlayground.dzcfg"));
+      BaseCtx ctx = Ctx.newCtx();
+      ctx.put("varfield", VarField::new);
+      ctx.put("varlist", VarList::new);
+      SiPlayground w = new SiPlayground(gc, ctx, gc.getProp("si.ui").gr(), args[0], Paths.get(args[1]));
+      mgr.start(w);
+    });
   }
   
   public void resized() {

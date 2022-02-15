@@ -48,7 +48,7 @@ public class VarField extends TextFieldNode {
     return true;
   }
   
-  public boolean keyF(Key key, int scancode, KeyAction a) {
+  public boolean keyF2(Key key, int scancode, KeyAction a) {
     if ((key.k_tab() || key.k_space()) && a.press) {
       Vec<VarField> v = tvar.fs;
       int i = v.indexOf(this);
@@ -63,7 +63,7 @@ public class VarField extends TextFieldNode {
       }
       return true;
     }
-    return super.keyF(key, scancode, a);
+    return super.keyF2(key, scancode, a);
   }
   
   public void typed(int codepoint) {

@@ -1,17 +1,17 @@
 .idea/
 *.iml
-out/
-lib/
-local/
-classes/
+/out/
+/lib/
+/local/
+/classes/
 hs_err_*.log
-run
+/run
 __pycache__
 
-UI/
-res/base/
+/UI
+/res/base/
 
-playground.jar
-exec/
-current.singeli
+/playground.jar
+/exec/
+/current.singeli
 perf.data*
