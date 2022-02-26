@@ -146,7 +146,10 @@ public class SiExecute {
       }
       note(siIROut[1]);
       String[] irLns = Tools.split(siIROut[2], '\n');
-      String t = Tools.split(irLns[irLns.length-4], ' ')[3];
+      int mainEnd = irLns.length-1;
+      while (!irLns[mainEnd].equals("endFn")) mainEnd--;
+      note(irLns[mainEnd-1]);
+      String t = Tools.split(irLns[mainEnd-1], ' ')[3];
       String[] ts = Tools.split(t.substring(1, t.length()-1), ',');
       for (int j = 0; j < newVarList.sz; j++) {
         String name = newVarList.get(j);
