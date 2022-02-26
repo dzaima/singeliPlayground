@@ -15,6 +15,7 @@ public class SiExecute {
   public final Path singeliPath, srcPath, execDir;
   public final String bqnExe;
   public final String ccExe = "cc";
+  public final String[] ccFlags;
   int mode;
   
   SiExecute(SiPlayground r, Path src, int mode) {
@@ -25,6 +26,7 @@ public class SiExecute {
     srcPath = src;
     execDir = r.exec;
     bqnExe = r.bqn;
+    ccFlags = Tools.split(r.asmCCFlags.getAll(), ' ');
     this.mode = mode;
   }
   
@@ -98,7 +100,14 @@ public class SiExecute {
     Path cFile = execDir.resolve("c.c");
     Path outFile = execDir.resolve("c.s");
     Tools.writeFile(cFile, siOut[2]);
-    if (!cc(new String[]{ccExe, "-march=native", "-masm=intel", "-O3", "-S", "-o", outFile.toString(), cFile.toString()})) return;
+    String[] cmd = new String[5+ccFlags.length];
+    cmd[0] = ccExe;
+    cmd[1] = "-S";
+    cmd[2] = "-o";
+    cmd[3] = outFile.toString();
+    System.arraycopy(ccFlags, 0, cmd, 4, ccFlags.length);
+    cmd[cmd.length-1] = cFile.toString();
+    if (!cc(cmd)) return;
     
     HashMap<String, String> nameMap = new HashMap<>();
     for (String l : Tools.split(siOut[2], '\n')) {

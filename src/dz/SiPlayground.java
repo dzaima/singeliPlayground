@@ -7,6 +7,7 @@ import dzaima.ui.gui.io.*;
 import dzaima.ui.node.Node;
 import dzaima.ui.node.ctx.*;
 import dzaima.ui.node.types.BtnNode;
+import dzaima.ui.node.types.editable.EditNode;
 import dzaima.ui.node.types.editable.code.*;
 import dzaima.utils.*;
 
@@ -29,6 +30,7 @@ public class SiPlayground extends NodeWindow {
   
   private final Node asmTab;
   public final CodeAreaNode asmArea;
+  public final EditNode asmCCFlags;
   
   public final ConcurrentLinkedQueue<Runnable> toRun = new ConcurrentLinkedQueue<>();
   
@@ -73,6 +75,7 @@ public class SiPlayground extends NodeWindow {
     
     asmTab = ctx.make(gc.getProp("si.asmUI").gr());
     asmArea = (CodeAreaNode) asmTab.ctx.id("asm");
+    asmCCFlags = (EditNode) asmTab.ctx.id("ccFlags");
     gc.langs().addLang("asm", AsmLang::new, "s");
     asmArea.setLang(gc.langs().fromName("asm"));
     
