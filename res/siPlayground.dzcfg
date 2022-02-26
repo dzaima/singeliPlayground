@@ -30,8 +30,10 @@ si {
   }
   asmUI = v {
     v { h=min
-      pad { all=.2em
-        scroll { y=off textfield { id=ccFlags family="DejaVu Sans Mono" text="-masm=intel -march=native -O3" } }
+      scroll { y=off x=hidden
+        pad { all=.2em
+          textfield { id=ccFlags family="DejaVu Sans Mono" text="-masm=intel -march=native -O3" }
+        }
       }
     }
     scroll {
