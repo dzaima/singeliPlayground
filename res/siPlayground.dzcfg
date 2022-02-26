@@ -6,12 +6,31 @@ si {
       scroll { codearea { id=note family="DejaVu Sans Mono" numbering=false } weight=0.4 }
     }
     hsep{x=0em y=0em}
-    pad { l=0.5em u=0.5em
-      scroll { x=off
-        varlist { pad=.7em
-          id=vars
+    v {
+      h { h=min bg=bg.header
+        hl { pad=.2em
+          btn { style=round radius=0em id=btnVars "variables" }
+          btn { style=round radius=0em id=btnAsm  "assembly" }
         }
       }
+      vsep{x=0em y=0em}
+      pad { l=0.5em
+        id=tabPlace
+        ""
+      }
+    }
+  }
+  
+  varsUI = pad { u=0.5em
+    scroll { x=off
+      varlist { pad=.7em
+        id=vars
+      }
+    }
+  }
+  asmUI = v {
+    scroll {
+      codearea { family="DejaVu Sans Mono" padLns=20 id=asm }
     }
   }
   

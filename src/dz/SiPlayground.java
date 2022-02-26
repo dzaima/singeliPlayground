@@ -4,8 +4,10 @@ import dzaima.ui.eval.PNodeGroup;
 import dzaima.ui.gui.*;
 import dzaima.ui.gui.config.GConfig;
 import dzaima.ui.gui.io.*;
+import dzaima.ui.node.Node;
 import dzaima.ui.node.ctx.*;
-import dzaima.ui.node.types.editable.code.CodeAreaNode;
+import dzaima.ui.node.types.BtnNode;
+import dzaima.ui.node.types.editable.code.*;
 import dzaima.utils.*;
 
 import java.nio.file.*;
@@ -18,9 +20,15 @@ public class SiPlayground extends NodeWindow {
   public Path exec = Paths.get("exec/");
   
   private final CodeAreaNode code;
-  private final VarList varsNode;
   public final CodeAreaNode noteNode;
+  public final Node tabPlace;
+  
+  private final Node varTab;
+  private final VarList varsNode;
   public final Vec<Var> vars = new Vec<>();
+  
+  private final Node asmTab;
+  public final CodeAreaNode asmArea;
   
   public final ConcurrentLinkedQueue<Runnable> toRun = new ConcurrentLinkedQueue<>();
   
@@ -59,7 +67,25 @@ public class SiPlayground extends NodeWindow {
       return value!=0;
     });
     code.um.popIgnore(i);
-    varsNode = (VarList) base.ctx.id("vars");
+    
+    varTab = ctx.make(gc.getProp("si.varsUI").gr());
+    varsNode = (VarList) varTab.ctx.id("vars");
+    
+    asmTab = ctx.make(gc.getProp("si.asmUI").gr());
+    asmArea = (CodeAreaNode) asmTab.ctx.id("asm");
+    gc.langs().addLang("asm", AsmLang::new, "s");
+    asmArea.setLang(gc.langs().fromName("asm"));
+    
+    tabPlace = base.ctx.id("tabPlace");
+    ((BtnNode) base.ctx.id("btnVars")).setFn(c -> tabPlace.replace(0, varTab));
+    ((BtnNode) base.ctx.id("btnAsm" )).setFn(c -> {
+      tabPlace.replace(0, asmTab);
+      asmArea.removeAll();
+      run();
+    });
+    
+    tabPlace.replace(0, varTab);
+    
     updVars();
   }
   
@@ -69,9 +95,11 @@ public class SiPlayground extends NodeWindow {
       prev.cancel();
       prev = null;
     }
-    SiExecute x = new SiExecute(this, file);
+    Node cTab = tabPlace.ch.get(0);
+    SiExecute x = new SiExecute(this, file, cTab==varTab? 0 : cTab==asmTab? 1 : 2);
     prev = x;
-    x.start(code.getAll());
+    String src = code.getAll();
+    x.start(src);
   }
   
   public void tick() {
