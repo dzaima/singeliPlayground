@@ -76,17 +76,44 @@ public class SiExecute {
   }
   
   public void exec(String code) throws Throwable {
-    int i = code.indexOf("\n⍎\n");
-    String init = code.substring(0, i);
-    String fn = code.substring(i+3);
-    if (mode==0) execVars(init, fn);
-    else if (mode==1) execAsm(init, fn);
+    StringBuilder defsC = new StringBuilder();
+    StringBuilder defsSi = new StringBuilder();
+    StringBuilder initSi = new StringBuilder();
+    StringBuilder bodySi = new StringBuilder();
+    StringBuilder curr = initSi;
+    defsC.append("#include <stdint.h>\n");
+    defsC.append("#include <stdio.h>\n");
+    defsC.append("#define EXEC_G(N) (void*)(&exec_global_##N)\n");
+    defsC.append("#define LIT(N) N\n");
+    for (String l : Tools.split(code, '\n')) {
+      if (l.startsWith("cinit ")) {
+        defsC.append(l.substring(6)).append('\n');
+      } else if (l.startsWith("defarr ")) {
+        if (l.length()<9) { note("Bad '#arr' definition"); return; }
+        int szEnd = 7;
+        while (szEnd+1<l.length() && l.charAt(szEnd)!=' ') szEnd++;
+        String tSi = l.substring(7, szEnd);
+        String tC = siToC.get(tSi);
+        if (tC==null) { note("Bad 'defarr' type"); return; }
+        int nEnd = szEnd+1;
+        while (nEnd<l.length() && Character.isUnicodeIdentifierPart(l.charAt(nEnd))) nEnd++;
+        String name = l.substring(szEnd+1, nEnd);
+        defsC.append(tC).append(' ').append(name).append("[] = {").append(l.substring(nEnd)).append("};\n");
+        defsSi.append("  def ").append(name).append(" = emit{*").append(tSi).append(", 'LIT', '").append(name).append("'}\n");
+      } else if (l.equals("⍎")) {
+        curr = bodySi;
+      } else {
+        curr.append(l).append('\n');
+      }
+    }
+    if (mode==0) execVars(defsC.toString(), defsSi.toString(), initSi.toString(), bodySi.toString());
+    else if (mode==1) execAsm(defsC.toString(), defsSi.toString(), initSi.toString(), bodySi.toString());
     else note("Unknown mode!");
   }
   
   public static Pattern labelPattern = Pattern.compile("^(.?[a-zA-Z0-9_$]+):");
-  public static Pattern ignored = Pattern.compile("^(#|\t\\.(section|p2align|cfi_startproc|text|type|size|globl|addrsig|addrsig_sym)\\b|\\s*# kill:)");
-  public void execAsm(String init, String fn) throws Exception {
+  public static Pattern ignored = Pattern.compile("^(#|\t\\.(section|p2align|cfi_startproc|text|type|size|globl|addrsig|addrsig_sym|intel_syntax|file)\\b|\\s*# kill:)");
+  public void execAsm(String defsC, String defsSi, String init, String body) throws Exception {
     status("generating C...");
     String[] siOut = runSi(init, false);
     if (!siOut[0].equals("0")) {
@@ -99,7 +126,7 @@ public class SiExecute {
     status("compiling C...");
     Path cFile = execDir.resolve("c.c");
     Path outFile = execDir.resolve("c.s");
-    Tools.writeFile(cFile, siOut[2]);
+    Tools.writeFile(cFile, defsC+siOut[2]);
     String[] cmd = new String[5+ccFlags.length];
     cmd[0] = ccExe;
     cmd[1] = "-S";
@@ -110,10 +137,12 @@ public class SiExecute {
     if (!cc(cmd)) return;
     
     HashMap<String, String> nameMap = new HashMap<>();
+    HashSet<String> siExports = new HashSet<>();
     for (String l : Tools.split(siOut[2], '\n')) {
       if (!l.startsWith(" ") && l.contains("(*")) {
         String[] ps = l.split("\\*const |\\) = |\\)|;");
         nameMap.put(ps[3], ps[1]);
+        siExports.add(ps[1]);
       }
     }
     
@@ -124,11 +153,12 @@ public class SiExecute {
       Matcher lm = labelPattern.matcher(l);
       if (lm.find()) {
         output = true;
-        String m = nameMap.get(lm.group(1));
+        String g1 = lm.group(1);
+        String m = nameMap.get(g1);
         if (m!=null) {
           if (res.length()>0) res.append('\n');
           l = m+": ################################";
-        } else if (!lm.group(1).startsWith(".")) { // don't show top-level non-singeli-internal symbols
+        } else if (siExports.contains(g1)) { // don't show singeli-generated exports
           output = false;
         }
       }
@@ -142,7 +172,7 @@ public class SiExecute {
       int len = 0;
       for (int i = 0; i < ps.length; i++) {
         if (i>0) {
-          int added = Math.max(1, 4+10*i - len);
+          int added = Math.max(1, 10*i-4 - len);
           len+= added;
           res.append(" ".repeat(added));
         }
@@ -159,7 +189,7 @@ public class SiExecute {
     
   }
   
-  public void execVars(String init, String fn) throws Throwable {
+  public void execVars(String defsC, String defsSi, String init, String body) throws Throwable {
     status("generating source...");
     
     StringBuilder mainCode = new StringBuilder("   \n");
@@ -168,10 +198,7 @@ public class SiExecute {
     StringBuilder tupRes = new StringBuilder();
     StringBuilder siRead = new StringBuilder();
     StringBuilder cInit = new StringBuilder();
-    cInit.append("#include <stdint.h>\n");
-    cInit.append("#include <stdio.h>\n");
-    cInit.append("#define EXEC_G(N) (void*)(&exec_global_##N)\n");
-    cInit.append("#define LIT(N) N\n");
+    cInit.append(defsC);
     for (Var v : vars) {
       varSet.add(v.name);
       if (tupRes.length()!=0) tupRes.append(", ");
@@ -184,21 +211,8 @@ public class SiExecute {
     }
     
     // build the main singeli code
-    for (String c : Tools.split(fn, '\n')) {
-      if (c.startsWith("#arr ")) {
-        if (c.length()<7) { note("Bad '#arr' definition"); return; }
-        int szEnd = 5;
-        while (szEnd+1<c.length() && c.charAt(szEnd)!=' ') szEnd++;
-        String tSi = c.substring(5, szEnd);
-        String tC = siToC.get(tSi);
-        if (tC==null) { note("Bad '#arr' type"); return; }
-        int nEnd = szEnd+1;
-        while (nEnd<c.length() && Character.isUnicodeIdentifierPart(c.charAt(nEnd))) nEnd++;
-        String name = c.substring(szEnd+1, nEnd);
-        cInit.append(tC).append(' ').append(name).append("[] = {").append(c.substring(nEnd)).append("};\n");
-        mainCode.append("  def ").append(name).append(" = emit{*").append(tSi).append(", 'LIT', '").append(name).append("'}\n");
-        continue;
-      }
+    mainCode.append(defsSi);
+    for (String c : Tools.split(body, '\n')) {
       int pE = c.indexOf('←');
       String expr = c;
       def: if (pE!=-1) {
@@ -332,7 +346,7 @@ public class SiExecute {
     if (exit!=0 || err.length>0) {
       note("C compilation "+(exit==0? "warnings" : "errors")+":\n");
       note(new String(err, StandardCharsets.UTF_8));
-      return exit!=0;
+      return exit==0;
     }
     return true;
   }
@@ -356,6 +370,7 @@ public class SiExecute {
     siToC.put("i8", "int8_t" );siToC.put("u8", "uint8_t" );
     siToC.put("i16","int16_t");siToC.put("u16","uint16_t");
     siToC.put("i32","int32_t");siToC.put("u32","uint32_t");
+    siToC.put("i64","int64_t");siToC.put("u64","uint64_t");
     siToC.put("f32","float"  );siToC.put("f64","double"  );
   }
 }
