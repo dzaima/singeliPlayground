@@ -112,7 +112,7 @@ public class SiExecute {
   }
   
   public static Pattern labelPattern = Pattern.compile("^(.?[a-zA-Z0-9_$]+):");
-  public static Pattern ignored = Pattern.compile("^(#|\t\\.(section|p2align|cfi_startproc|text|type|size|globl|addrsig|addrsig_sym|intel_syntax|file)\\b|\\s*# kill:)");
+  public static Pattern ignored = Pattern.compile("^(#|\t\\.(section|p2align|cfi_startproc|text|type|size|globl|addrsig|addrsig_sym|intel_syntax|file|cfi_def_cfa_offset|cfi_offset)\\b|\\s*# kill:)");
   public void execAsm(String defsC, String defsSi, String init, String body) throws Exception {
     status("generating C...");
     String[] siOut = runSi(init, false);
@@ -191,20 +191,21 @@ public class SiExecute {
   
   public void execVars(String defsC, String defsSi, String init, String body) throws Throwable {
     status("generating source...");
+    String sep = "<singeli playground stdout separator>";
     
     StringBuilder mainCode = new StringBuilder("   \n");
     HashSet<String> varSet = new HashSet<>();
     Vec<String> newVarList = new Vec<>();
-    StringBuilder tupRes = new StringBuilder();
+    StringBuilder showType = new StringBuilder();
     StringBuilder siRead = new StringBuilder();
     StringBuilder cInit = new StringBuilder();
     cInit.append(defsC);
     for (Var v : vars) {
-      varSet.add(v.name);
-      if (tupRes.length()!=0) tupRes.append(", ");
-      tupRes.append(v.name);
+      String name = v.name;
+      varSet.add(name);
+      showType.append("show{type{").append(name).append("}};");
       
-      String ln = "  "+v.name+":= load{emit{*"+v.type()+", 'EXEC_G', '"+v.name+"'}, 0}";
+      String ln = "  "+name+":= load{emit{*"+v.type()+", 'EXEC_G', '"+name+"'}, 0}";
       
       siRead.append(ln).append('\n');
       
@@ -226,8 +227,7 @@ public class SiExecute {
         if (had && onlyInit) continue;
         if (!had) {
           varSet.add(newVarList.add(name));
-          if (tupRes.length()!=0) tupRes.append(", ");
-          tupRes.append(name);
+          showType.append("show{type{").append(name).append("}};");
         }
         
         expr = name+(had?"=":":=")+c.substring(pE+1);
@@ -238,26 +238,24 @@ public class SiExecute {
     
     // parse out the types of the variables
     status("generating IR...");
-    String[] siIROut = runSi(codeStart+"  __res:=tup{"+tupRes+"}\n  \n}", true);
+    String[] siIROut = runSi(codeStart+"  show{'"+sep+"'};"+showType+"\n  \n}", true);
     // System.out.println(siIROut[0]);
     // System.out.println(siIROut[1]);
     // System.out.println(siIROut[2]);
+    String out0 = siIROut[1];
     if (!siIROut[0].equals("0")) {
       note("Failed to build Singeli:\n");
-      note(siIROut[1]);
+      note(out0);
       return;
     }
-    note(siIROut[1]);
-    String[] irLns = Tools.split(siIROut[2], '\n');
-    int mainEnd = irLns.length-1;
-    while (!irLns[mainEnd].equals("endFn")) mainEnd--;
-    String t = Tools.split(irLns[mainEnd-1], ' ')[3];
-    String[] ts = Tools.split(t.substring(1, t.length()-1), ',');
+    String[] out0Parts = out0.split(sep+"\n");
+    note(out0Parts[0]);
+    String[] ts = Tools.split(out0Parts[1].substring(0, out0Parts[1].length()-1), '\n');
     for (int j = 0; j < newVarList.sz; j++) {
       String name = newVarList.get(j);
       String ty = ts[ts.length-newVarList.sz + j];
       String[] ps = Tools.split(ty.substring(1), ']');
-    
+      
       int count = Integer.parseInt(ps[0]);
       char tchr = ps[1].charAt(0);
       VTy vty = ps[1].equals("u1")? VTy.HEX : tchr=='i'? VTy.SIGNED : tchr=='f'? VTy.FLOAT : VTy.HEX;
@@ -266,7 +264,6 @@ public class SiExecute {
     }
     
     // generate variable I/O
-    String sep = "<singeli playground stdout separator>";
     StringBuilder cWrite = new StringBuilder("  printf(\""+sep+"\");\n");
     StringBuilder siWrites = new StringBuilder();
     boolean first = true;
