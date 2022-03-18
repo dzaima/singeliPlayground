@@ -24,13 +24,12 @@ public class SiPlayground extends NodeWindow {
   public final CodeAreaNode noteNode;
   public final Node tabPlace;
   
-  private final Node varTab;
+  public final Node varTab;
   private final VarList varsNode;
   public final Vec<Var> vars = new Vec<>();
   
-  private final Node asmTab;
-  public final CodeAreaNode asmArea;
-  public final EditNode asmCCFlags;
+  public final Vec<Tab> tabs = new Vec<>();
+  public Tab cTab;
   
   public final ConcurrentLinkedQueue<Runnable> toRun = new ConcurrentLinkedQueue<>();
   
@@ -73,21 +72,15 @@ public class SiPlayground extends NodeWindow {
     varTab = ctx.make(gc.getProp("si.varsUI").gr());
     varsNode = (VarList) varTab.ctx.id("vars");
     
-    asmTab = ctx.make(gc.getProp("si.asmUI").gr());
-    asmArea = (CodeAreaNode) asmTab.ctx.id("asm");
-    asmCCFlags = (EditNode) asmTab.ctx.id("ccFlags");
-    gc.langs().addLang("asm", AsmLang::new, "s");
-    asmArea.setLang(gc.langs().fromName("asm"));
     
     tabPlace = base.ctx.id("tabPlace");
-    ((BtnNode) base.ctx.id("btnVars")).setFn(c -> tabPlace.replace(0, varTab));
-    ((BtnNode) base.ctx.id("btnAsm" )).setFn(c -> {
-      tabPlace.replace(0, asmTab);
-      asmArea.removeAll();
-      run();
-    });
     
-    tabPlace.replace(0, varTab);
+    new VarsTab(this).addTab("variables");
+    new AsmTab(this).addTab("assembly 1");
+    new AsmTab(this).addTab("assembly 2");
+    new AsmTab(this).addTab("assembly 3");
+    
+    tabs.get(0).open();
     
     updVars();
   }
@@ -98,8 +91,7 @@ public class SiPlayground extends NodeWindow {
       prev.cancel();
       prev = null;
     }
-    Node cTab = tabPlace.ch.get(0);
-    SiExecute x = new SiExecute(this, file, cTab==varTab? 0 : cTab==asmTab? 1 : 2);
+    SiExecute x = new SiExecute(this, file, cTab);
     prev = x;
     String src = code.getAll();
     x.start(src);
