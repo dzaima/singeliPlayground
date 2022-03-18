@@ -248,12 +248,12 @@ public class SiExecute {
       note(out0);
       return;
     }
-    String[] out0Parts = out0.split(sep+"\n");
+    String[] out0Parts = out0.split(sep+"\n", -1);
     note(out0Parts[0]);
-    String[] ts = Tools.split(out0Parts[1].substring(0, out0Parts[1].length()-1), '\n');
+    String[] ts = Tools.split(out0Parts[1], '\n');
     for (int j = 0; j < newVarList.sz; j++) {
       String name = newVarList.get(j);
-      String ty = ts[ts.length-newVarList.sz + j];
+      String ty = ts[ts.length-1 - newVarList.sz + j];
       String[] ps = Tools.split(ty.substring(1), ']');
       
       int count = Integer.parseInt(ps[0]);
@@ -304,7 +304,7 @@ public class SiExecute {
     // execute actual thing & read results
     Process exec = Runtime.getRuntime().exec(new String[]{outFile});
     String out = new String(exec.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-    String[] outParts = out.split(sep);
+    String[] outParts = out.split(sep,-1);
     if (outParts.length!=2) {
       note("Bad stdout:\n");
       note(out);
