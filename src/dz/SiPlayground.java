@@ -54,10 +54,15 @@ public class SiPlayground extends NodeWindow {
       s+= "def load {a:T, n    & width{eltype{T}}==256 & isf64v{eltype{T}}} = emit{eltype{T}, '_mm256_loadu_pd', cast_p{f64, emit{T, 'op +', a, n}}}\n";
       s+= "def store{a:T, n, v & width{eltype{T}}==256 & isintv{eltype{T}}} = emit{void, '_mm256_storeu_si256',          emit{T, 'op +', a, n}, v}\n";
       s+= "def store{a:T, n, v & width{eltype{T}}==256 & isf64v{eltype{T}}} = emit{void, '_mm256_storeu_pd', cast_p{f64, emit{T, 'op +', a, n}}, v}\n";
+      s+= "\n";
+      s+= "fn(x:*[8]i32) = load{x,10}+emit{[8]i32, '_mm256_set1_epi32', 1}\n";
+      s+= "'fn' = fn\n";
       s+= "\n⍎\n\n";
       s+= "# 'name ← expression' to update watch\n";
       s+= "# 'name:← expression' to set only if name doesn't already exist\n";
       s+= "# variables from a watch can be read as regular variables\n";
+      s+= "c:← cast{i32, 1}\n";
+      s+= "c = c+1\n";
       code.append(s+"\na ← emit{[8]i32, '_mm256_set1_epi32', 1}");
     }
     try {
