@@ -83,8 +83,8 @@ public class SiExecute {
     StringBuilder curr = initSi;
     defsC.append("#include <stdint.h>\n");
     defsC.append("#include <stdio.h>\n");
+    defsC.append("#include <string.h>\n");
     defsC.append("#define EXEC_G(N) (void*)(&exec_global_##N)\n");
-    defsC.append("#define LIT(N) N\n");
     for (String l : Tools.split(code, '\n')) {
       if (l.startsWith("cinit ")) {
         defsC.append(l.substring(6)).append('\n');
@@ -99,7 +99,7 @@ public class SiExecute {
         while (nEnd<l.length() && Character.isUnicodeIdentifierPart(l.charAt(nEnd))) nEnd++;
         String name = l.substring(szEnd+1, nEnd);
         defsC.append(tC).append(' ').append(name).append("[] = {").append(l.substring(nEnd)).append("};\n");
-        defsSi.append("  def ").append(name).append(" = emit{*").append(tSi).append(", 'LIT', '").append(name).append("'}\n");
+        defsSi.append("  def ").append(name).append(" = emit{*").append(tSi).append(", '', '").append(name).append("'}\n");
       } else if (l.equals("⍎")) {
         curr = bodySi;
       } else {
@@ -254,18 +254,30 @@ public class SiExecute {
     for (int j = 0; j < newVarList.sz; j++) {
       String name = newVarList.get(j);
       String ty = ts[ts.length-1 - newVarList.sz + j];
-      String[] ps = Tools.split(ty.substring(1), ']');
+      String[] ps = Tools.split(ty, ']');
       
-      int count = Integer.parseInt(ps[0]);
-      char tchr = ps[1].charAt(0);
-      VTy vty = ps[1].equals("u1")? VTy.HEX : tchr=='i'? VTy.SIGNED : tchr=='f'? VTy.FLOAT : VTy.HEX;
-      int width = Integer.parseInt(ps[1].substring(1));
-      vars.add(new Var(r, name, new byte[count*width/8], width, vty));
+      int count;
+      boolean scalar;
+      String elt;
+      if (ps.length == 1) {
+        scalar = true;
+        count = 1;
+        elt = ps[0];
+      } else {
+        scalar = false;
+        count = Integer.parseInt(ps[0].substring(1));
+        elt = ps[1];
+      }
+      char tchr = elt.charAt(0);
+      VTy vty = elt.equals("u1")? VTy.HEX : tchr=='i'? VTy.SIGNED : tchr=='f'? VTy.FLOAT : VTy.HEX;
+      int width = Integer.parseInt(elt.substring(1));
+      vars.add(new Var(r, name, new byte[count*width/8], width, vty, scalar));
     }
     
     // generate variable I/O
     StringBuilder cWrite = new StringBuilder("  printf(\""+sep+"\");\n");
     StringBuilder siWrites = new StringBuilder();
+    siWrites.append("  def store_n{p,n,v} = emit{void, 'memcpy', p, v, n}\n");
     boolean first = true;
     for (Var v : vars) {
       String cName = "exec_global_"+v.name;
@@ -277,7 +289,12 @@ public class SiExecute {
       }
       cInit.append("};\n");
       
-      String ln = "  store{emit{*"+v.byteType()+", 'EXEC_G', '"+v.name+"'}, 0, emit{"+v.byteType()+", '', "+v.name+"}}";
+      String ln;
+      if (v.scalar) {
+        ln = "  store_n{emit{*u8, 'EXEC_G', '"+v.name+"'}, "+v.data.length+", emit{*void, '&', "+v.name+"}}";
+      } else {
+        ln = "  store{emit{*"+v.byteType()+", 'EXEC_G', '"+v.name+"'}, 0, emit{"+v.byteType()+", '', "+v.name+"}}";
+      }
       
       cWrite.append("  for (int i = 0; i < ").append(v.data.length).append("; i++)")
         .append("printf(\"%d \", (signed char)").append(cName).append("[i]);\n");
@@ -289,7 +306,7 @@ public class SiExecute {
     
     status("generating C...");
     String[] siCOut = runSi(codeStart+siWrites + "  \n}\n'exec_run'=__exec_fn", false);
-    if (!siCOut[0].equals("0")) { note("Failed second singeli build:\n"); note(siCOut[1]); return; }
+    if (!siCOut[0].equals("0")) { note("Failed second singeli build:\n"); note(siCOut[1]+"\n"); note(siCOut[3]+"\n"); return; }
     cInit.append(siCOut[2]);
     cInit.append("int main() {\n").append("\n  exec_run();\n").append(cWrite).append("\n}\n");
     Path cFile = execDir.resolve("c.c");
@@ -356,9 +373,9 @@ public class SiExecute {
     Tools.writeFile(tmpIn, src);
     Process p = Runtime.getRuntime().exec(ir? new String[]{bqnExe, siFile, "-o", tmpOut.toString(), "-t", "ir", tmpIn.toString()}
       : new String[]{bqnExe, siFile, "-o", tmpOut.toString(),             tmpIn.toString()});
-    p.getErrorStream().close();
     String out = new String(p.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-    return new String[]{Integer.toString(p.waitFor()), out, Tools.readFile(tmpOut)};
+    String err = new String(p.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
+    return new String[]{Integer.toString(p.waitFor()), out, Tools.readFile(tmpOut), err};
   }
   
   

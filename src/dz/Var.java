@@ -10,6 +10,7 @@ import java.util.HashSet;
 public class Var {
   public final SiPlayground r;
   public Node n;
+  public final boolean scalar;
   public final String name;
   public final byte[] data;
   public final Vec<TVar> types = new Vec<>();
@@ -19,11 +20,12 @@ public class Var {
   private static final String[] BTN_KS = new String[]{"bg", "borderL"};
   private static final Prop[] BTN_VS = new Prop[]{new ColProp(0), new ColProp(0)};
   
-  public Var(SiPlayground r, String name, byte[] data, int w0, VTy t0) {
+  public Var(SiPlayground r, String name, byte[] data, int w0, VTy t0, boolean scalar) {
     this.r = r;
     this.name = name;
     this.data = data;
     n = r.base.ctx.make(r.gc.getProp("si.vlUI").gr());
+    this.scalar = scalar;
     types.add(new TVar(this, w0, t0));
     nameNode = n.ctx.id("name");
   
@@ -115,7 +117,9 @@ public class Var {
   public String type() {
     if (types.sz==0) return "["+(data.length/4)+"]i32";
     TVar t = types.get(0);
-    return "["+(data.length/(t.width/8))+"]"+(t.type==VTy.SIGNED?"i":t.type==VTy.FLOAT?"f":"u")+t.width;
+    String elt = (t.type==VTy.SIGNED?"i":t.type==VTy.FLOAT?"f":"u")+t.width;
+    if (scalar) return elt;
+    return "["+(data.length/(t.width/8))+"]"+elt;
   }
   public String byteType() {
     return "["+data.length+"]u8";
