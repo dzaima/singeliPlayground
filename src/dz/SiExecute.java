@@ -112,7 +112,7 @@ public class SiExecute {
   }
   
   public static Pattern labelPattern = Pattern.compile("^(.?[a-zA-Z0-9_$]+):");
-  public static Pattern ignored = Pattern.compile("^(#|\t\\.(section|p2align|cfi_startproc|text|type|size|globl|addrsig|addrsig_sym|intel_syntax|file|cfi_def_cfa_offset|cfi_offset)\\b|\\s*# kill:)");
+  public static Pattern ignored = Pattern.compile("^(#|\t\\.(section|p2align|text|type|size|globl|addrsig|addrsig_sym|intel_syntax|file|cfi_.+)\\b|\\s*# kill:)");
   public void execAsm(String defsC, String defsSi, String init, String body) throws Exception {
     status("generating C...");
     String[] siOut = runSi(init, false);
@@ -127,13 +127,13 @@ public class SiExecute {
     Path cFile = execDir.resolve("c.c");
     Path outFile = execDir.resolve("c.s");
     Tools.writeFile(cFile, defsC+siOut[2]);
-    String[] cmd = new String[5+ccFlags.length];
-    cmd[0] = ccExe;
-    cmd[1] = "-S";
-    cmd[2] = "-o";
-    cmd[3] = outFile.toString();
-    System.arraycopy(ccFlags, 0, cmd, 4, ccFlags.length);
-    cmd[cmd.length-1] = cFile.toString();
+    int s = ccFlags.length;
+    String[] cmd = new String[s+4];
+    System.arraycopy(ccFlags, 0, cmd, 0, s);
+    cmd[s] = "-S";
+    cmd[s+1] = "-o";
+    cmd[s+2] = outFile.toString();
+    cmd[s+3] = cFile.toString();
     if (!cc(cmd)) return;
     
     HashMap<String, String> nameMap = new HashMap<>();

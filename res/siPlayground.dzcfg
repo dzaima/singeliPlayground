@@ -32,7 +32,7 @@ si {
     v { h=min
       scroll { y=off x=hidden
         pad { all=.2em
-          textfield { id=ccFlags family="DejaVu Sans Mono" text="-masm=intel -march=native -O3" }
+          textfield { id=ccFlags family="DejaVu Sans Mono" text="cc -masm=intel -march=native -O3" }
         }
       }
     }
