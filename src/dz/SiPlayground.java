@@ -6,16 +6,17 @@ import dzaima.ui.gui.config.GConfig;
 import dzaima.ui.gui.io.*;
 import dzaima.ui.node.Node;
 import dzaima.ui.node.ctx.*;
-import dzaima.ui.node.types.BtnNode;
-import dzaima.ui.node.types.editable.EditNode;
-import dzaima.ui.node.types.editable.code.*;
+import dzaima.ui.node.types.editable.code.CodeAreaNode;
 import dzaima.utils.*;
+import io.github.humbleui.skija.Surface;
 
 import java.nio.file.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class SiPlayground extends NodeWindow {
+  public static final Path LOCAL_CFG = Paths.get("local.dzcfg");
   public Path file = Paths.get("current.singeli");
+  
   public String bqn;
   public Path singeliPath;
   public Path exec = Paths.get("exec/");
@@ -84,6 +85,7 @@ public class SiPlayground extends NodeWindow {
     new AsmTab(this).addTab("assembly 1");
     new AsmTab(this).addTab("assembly 2");
     new AsmTab(this).addTab("assembly 3");
+    new IRTab(this).addTab("IR");
     
     tabs.get(0).open();
     
@@ -125,17 +127,26 @@ public class SiPlayground extends NodeWindow {
       return;
     }
     Windows.start(mgr -> {
-      GConfig gc = GConfig.newConfig();
-      gc.addCfg(() -> Tools.readRes("siPlayground.dzcfg"));
+      GConfig gc = GConfig.newConfig(gc0 -> {
+        gc0.addCfg(() -> Tools.readRes("siPlayground.dzcfg"));
+        gc0.addCfg(() -> {
+          if (Files.exists(LOCAL_CFG)) return Tools.readFile(LOCAL_CFG);
+          return "";
+        });
+      });
+      gc.langs().addLang("asm", AsmLang::new, "s");
+      
       BaseCtx ctx = Ctx.newCtx();
       ctx.put("varfield", VarField::new);
       ctx.put("varlist", VarList::new);
+      
       SiPlayground w = new SiPlayground(gc, ctx, gc.getProp("si.ui").gr(), args[0], Paths.get(args[1]));
       mgr.start(w);
     });
   }
   
-  public void resized() {
+  public void resized(Surface s) {
+    super.resized(s);
     if (varsNode!=null) varsNode.mResize();
   }
   

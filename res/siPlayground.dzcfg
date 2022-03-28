@@ -40,6 +40,11 @@ si {
       codearea { family="DejaVu Sans Mono" padLns=20 id=asm }
     }
   }
+  irUI = v {
+    scroll {
+      codearea { family="DejaVu Sans Mono" padLns=20 id=ir }
+    }
+  }
   
   numUI = scroll { y=off x=hidden varfield { family="DejaVu Sans Mono" radius=0em id=field } }
   
