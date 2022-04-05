@@ -121,7 +121,8 @@ public class SiExecute {
     String[] siOut = runSi(init, false);
     if (!siOut[0].equals("0")) {
       note("Failed to build Singeli:\n");
-      note(siOut[1]);
+      note(siOut[1]+"\n");
+      note(siOut[3]);
       return;
     }
     note(siOut[1]);
@@ -196,7 +197,8 @@ public class SiExecute {
     String[] siOut = runSi(init, true);
     if (!siOut[0].equals("0")) {
       note("Failed to build Singeli:\n");
-      note(siOut[1]);
+      note(siOut[1]+"\n");
+      note(siOut[3]);
       return;
     }
     note(siOut[1]);
@@ -265,7 +267,8 @@ public class SiExecute {
     String out0 = siIROut[1];
     if (!siIROut[0].equals("0")) {
       note("Failed to build Singeli:\n");
-      note(out0);
+      note(out0+"\n");
+      note(siIROut[3]);
       return;
     }
     String[] out0Parts = out0.split(sep+"\n", -1);
@@ -341,13 +344,6 @@ public class SiExecute {
     // execute actual thing & read results
     Process exec = Runtime.getRuntime().exec(new String[]{outFile});
     String out = new String(exec.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-    String[] outParts = out.split(sep,-1);
-    if (outParts.length!=2) {
-      note("Bad stdout:\n");
-      note(out);
-      return;
-    }
-    String[] outVars = Tools.split(outParts[1], '\n');
     int ec = exec.waitFor();
     if (ec!=0) {
       note("Execution stopped with exit code "+ec+"\n");
@@ -355,6 +351,13 @@ public class SiExecute {
       note(new String(exec.getErrorStream().readAllBytes(), StandardCharsets.UTF_8));
       return;
     }
+    String[] outParts = out.split(sep,-1);
+    if (outParts.length!=2) {
+      note("Bad stdout:\n");
+      note(out);
+      return;
+    }
+    String[] outVars = Tools.split(outParts[1], '\n');
     r.toRun.add(() -> {
       for (int j = 0; j < outVars.length-1; j++) {
         Var v = vars.get(j);
