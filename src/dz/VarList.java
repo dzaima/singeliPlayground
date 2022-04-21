@@ -1,6 +1,7 @@
 package dz;
 
 import dzaima.ui.node.Node;
+import dzaima.ui.gui.Graphics;
 import dzaima.ui.node.ctx.Ctx;
 import dzaima.ui.node.prop.Prop;
 import dzaima.ui.node.types.HNode;
@@ -13,6 +14,10 @@ public class VarList extends Node {
   private int pad;
   public void propsUpd() { super.propsUpd();
     pad = vs[id("pad")].len();
+  }
+  
+  public void drawC(Graphics g) {
+    if (ch.sz==0) g.text("ctrl+s or ctrl+enter to run", gc.defFont, 0, gc.defFont.hi, 0xa0808080);
   }
   
   public int minH(int w) {
