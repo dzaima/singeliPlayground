@@ -4,30 +4,31 @@ import dzaima.ui.node.Node;
 import dzaima.ui.gui.Graphics;
 import dzaima.ui.node.ctx.Ctx;
 import dzaima.ui.node.prop.Prop;
-import dzaima.ui.node.types.HNode;
+import dzaima.ui.node.types.*;
+import dzaima.utils.Vec;
 
-public class VarList extends Node {
+public class VarList extends ReorderableNode {
+  public SiPlayground r;
   public VarList(Ctx ctx, String[] ks, Prop[] vs) {
     super(ctx, ks, vs);
-  }
-  
-  private int pad;
-  public void propsUpd() { super.propsUpd();
-    pad = vs[id("pad")].len();
   }
   
   public void drawC(Graphics g) {
     if (ch.sz==0) g.text("ctrl+s or ctrl+enter to run", gc.defFont, 0, gc.defFont.hi, 0xa0808080);
   }
   
-  public int minH(int w) {
-    if (ch.sz==0) return 0;
-    int res = (ch.sz-1)*pad;
-    for (Node c : ch) res+= c.minH(w);
-    return res;
+  public void stopReorder() {
+    stopReorder(false);
   }
   
-  public int minW() {
+  public void reorderEnded(int oi, int ni, Node n) {
+    Vec<Var> vs = r.vars;
+    Var o = vs.get(oi);
+    vs.removeAt(oi);
+    vs.insert(ni, o);
+  }
+  
+  public int fillW() {
     int w = ctx.win().w/2;
     for (Node c : ch) {
       if (c.ch.sz > 1) {
@@ -42,9 +43,6 @@ public class VarList extends Node {
     }
     for (Node c : ch) w = Math.max(w, c.minW());
     return w;
-  }
-  public int maxW() {
-    return minW();
   }
   
   protected void resized() {

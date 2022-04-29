@@ -77,6 +77,7 @@ public class SiPlayground extends NodeWindow {
     
     varTab = ctx.make(gc.getProp("si.varsUI").gr());
     varsNode = (VarList) varTab.ctx.id("vars");
+    varsNode.r = this;
     
     
     tabPlace = base.ctx.id("tabPlace");
@@ -114,6 +115,7 @@ public class SiPlayground extends NodeWindow {
   }
   
   public void updVars() {
+    varsNode.stopReorder();
     varsNode.clearCh();
     for (int i = 0; i < vars.sz; i++) {
       varsNode.add(vars.get(i).n);
