@@ -123,7 +123,7 @@ public class SiPlayground extends NodeWindow {
   }
   
   public static void main(String[] args) {
-    // Windows.setManager(Windows.Manager.JWM);
+    Windows.setManager(Windows.Manager.JWM);
     if (args.length!=2) {
       System.out.println("Usage: ./run cbqn path/to/Singeli");
       return;

@@ -13,4 +13,4 @@ b = importlib.import_module(uiPath+".build")
 
 cp = b.build_ui_lib(uiPath)
 b.jar("playground.jar", cp)
-b.make_run("run", cp+":playground.jar", "dz.SiPlayground", "-ea")
+b.make_run("run", cp+["playground.jar"], "dz.SiPlayground", "-ea")
