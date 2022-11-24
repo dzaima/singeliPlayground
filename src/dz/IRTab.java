@@ -21,6 +21,10 @@ public class IRTab extends Tab {
     r.run();
   }
   
+  public void setContents(String s) {
+    AsmTab.setContents(irArea, s);
+  }
+  
   public int mode() {
     return 2;
   }

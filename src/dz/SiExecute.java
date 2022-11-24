@@ -187,8 +187,7 @@ public class SiExecute {
     }
     String resStr = res.toString();
     r.toRun.add(() -> {
-      ((AsmTab) tab).asmArea.removeAll();
-      ((AsmTab) tab).asmArea.append(resStr);
+      ((AsmTab) tab).setContents(resStr);
     });
     
   }
@@ -205,8 +204,7 @@ public class SiExecute {
     
     String resStr = siOut[2];
     r.toRun.add(() -> {
-      ((IRTab) tab).irArea.removeAll();
-      ((IRTab) tab).irArea.append(resStr);
+      ((IRTab) tab).setContents(resStr);
     });
     
   }
