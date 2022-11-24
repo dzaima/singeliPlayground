@@ -31,7 +31,11 @@ public class VarField extends TextFieldNode {
       String s = tvar.fs.get(j).getAll();
       long c;
       try {
-        switch (tvar.type) {
+        VTy parseType = tvar.type;
+        if (s.startsWith("0x")) { s=s.substring(2); parseType=VTy.HEX; }
+        if (s.startsWith("0b")) { s=s.substring(2); parseType=VTy.BIN; }
+        switch (parseType) {
+          case BIN: c = Long.parseUnsignedLong(s, 2); break;
           case HEX: c = Long.parseUnsignedLong(s, 16); break;
           case UNSIGNED: c = Long.parseUnsignedLong(s); break;
           case SIGNED: c = Long.parseLong(s); break;

@@ -31,8 +31,13 @@ public class TVar {
     }
     BtnNode next = (BtnNode) n.ctx.id("ty");
     next.setFn(b -> {
-      if (type !=VTy.FLOAT) {
-        type = type==VTy.SIGNED? VTy.UNSIGNED : type==VTy.UNSIGNED? VTy.HEX : VTy.SIGNED;
+      if (type!=VTy.FLOAT) {
+        switch (type) {
+          case SIGNED:   type = VTy.UNSIGNED;break;
+          case UNSIGNED: type = VTy.HEX; break;
+          case HEX:      type = v.scalar? VTy.BIN : VTy.SIGNED; break;
+          case BIN:      type =                     VTy.SIGNED; break;
+        }
         v.updTitle();
         updData();
       }
@@ -43,7 +48,7 @@ public class TVar {
   
   public void updData() {
     nextText.clearCh();
-    nextText.add(new StringNode(nextText.ctx, type==VTy.FLOAT?"f":type==VTy.HEX?"x":type==VTy.SIGNED?"s":"u"));
+    nextText.add(new StringNode(nextText.ctx, type.btnName));
     long[] vs = v.read(width);
     for (int i = 0; i < vs.length; i++) {
       EditNode n = fs.get(i);
@@ -61,10 +66,16 @@ public class TVar {
         case UNSIGNED:
           nv = Long.toUnsignedString(c);
           break;
-        case HEX:
-          String s = Long.toUnsignedString(c, 16).toUpperCase();
+        case HEX: {
+          String s = Long.toHexString(c).toUpperCase();
           nv = Tools.repeat('0', width/4 - s.length()) + s;
           break;
+        }
+        case BIN: {
+          String s = Long.toBinaryString(c);
+          nv = Tools.repeat('0', width-s.length()) + s;
+          break;
+        }
         default:
           nv = "0";
           break;
