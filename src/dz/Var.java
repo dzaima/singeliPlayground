@@ -15,6 +15,10 @@ public class Var {
   public final byte[] data;
   public final Vec<TVar> types = new Vec<>();
   
+  public VTy typeQuality;
+  public int typeCount; // 0 for scalar; e.g. 4 for [4]f64
+  public int typeWidth; // e.g. 64 for both f64 and [4]f64
+  
   private final Vec<BtnNode> btns;
   private final Node nameNode;
   private static final String[] BTN_KS = new String[]{"bg", "borderL"};
@@ -26,9 +30,13 @@ public class Var {
     this.data = data;
     n = r.base.ctx.make(r.gc.getProp("si.vlUI").gr());
     this.scalar = scalar;
-    types.add(new TVar(this, w0, t0));
+    types.add(new TVar(this, w0==1? 8 : w0, t0));
     nameNode = n.ctx.id("name");
-  
+    
+    typeQuality = t0;
+    typeWidth = w0;
+    typeCount = scalar? 0 : data.length*8/w0;
+    
     btns = new Vec<>();
     Node btnList = n.ctx.id("btns");
     for (String btnName : new String[]{"8","16","32","64","f32","f64","X"}) {
@@ -115,11 +123,14 @@ public class Var {
   }
   
   public String type() {
-    if (types.sz==0) return "["+(data.length/4)+"]i32";
-    TVar t = types.get(0);
-    String elt = (t.type==VTy.SIGNED?"i":t.type==VTy.FLOAT?"f":"u")+t.width;
+    // if (types.sz==0) return "["+(data.length/4)+"]i32";
+    // TVar t = types.get(0);
+    // String elt = (t.type==VTy.SIGNED?"i":t.type==VTy.FLOAT?"f":"u")+t.width;
+    // if (scalar) return elt;
+    // return "["+(data.length/(t.width/8))+"]"+elt;
+    String elt = (typeQuality==VTy.SIGNED?"i":typeQuality==VTy.FLOAT?"f":"u")+typeWidth;
     if (scalar) return elt;
-    return "["+(data.length/(t.width/8))+"]"+elt;
+    else return "["+typeCount+"]"+elt;
   }
   public String byteType() {
     return "["+data.length+"]u8";

@@ -4,7 +4,7 @@ import dzaima.utils.*;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
+import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.*;
@@ -15,6 +15,8 @@ public class SiExecute {
   public final Path singeliPath, srcPath, execDir;
   public final String bqnExe;
   public final String ccExe = "cc";
+  public final String externalRunner;
+  public final String[] singeliArgs;
   public final String[] ccFlags;
   int mode;
   private final Tab tab;
@@ -30,6 +32,8 @@ public class SiExecute {
     this.ccFlags = tab instanceof AsmTab? Tools.split(((AsmTab) tab).asmCCFlags.getAll(), ' ') : null;
     this.mode = tab.mode();
     this.tab = tab;
+    this.externalRunner = r.externalRunner;
+    this.singeliArgs = r.singeliArgs;
   }
   
   
@@ -314,7 +318,7 @@ public class SiExecute {
       if (v.scalar) {
         ln = "  store_n{emit{*u8, 'EXEC_G', '"+v.name+"'}, "+v.data.length+", emit{*void, '&', "+v.name+"}}";
       } else {
-        ln = "  store{emit{*"+v.byteType()+", 'EXEC_G', '"+v.name+"'}, 0, emit{"+v.byteType()+", '', "+v.name+"}}";
+        ln = "  store{emit{*"+v.byteType()+", 'EXEC_G', '"+v.name+"'}, 0, reinterpret{"+v.byteType()+", "+v.name+"}}";
       }
       
       cWrite.append("  for (int i = 0; i < ").append(v.data.length).append("; i++)")
@@ -334,24 +338,47 @@ public class SiExecute {
     String outFile = execDir.resolve("a.out").toString();
     Tools.writeFile(cFile, cInit.toString());
     
-    status("compiling C...");
-    // invoke cc
-    if (!cc(new String[]{ccExe, "-march=native", "-o", outFile, cFile.toString()})) return;
+    String out;
+    if (externalRunner==null) {
+      status("compiling C...");
+      // invoke cc
+      if (!cc(new String[]{ccExe, "-march=native", "-o", outFile, cFile.toString()})) return;
+    
+      status("executing C...");
+      // execute actual thing & read results
+      Process exec = Runtime.getRuntime().exec(new String[]{outFile});
+      out = new String(exec.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+      int ec = exec.waitFor();
+      if (ec!=0) {
+        note("Execution stopped with exit code "+ec+"\n");
+        note(out+"\n");
+        note(new String(exec.getErrorStream().readAllBytes(), StandardCharsets.UTF_8));
+        return;
+      }
+    } else {
+      status("compiling & running C...");
+      Path extOutFile = execDir.resolve("external.out");
   
-    status("executing C...");
-    // execute actual thing & read results
-    Process exec = Runtime.getRuntime().exec(new String[]{outFile});
-    String out = new String(exec.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-    int ec = exec.waitFor();
-    if (ec!=0) {
-      note("Execution stopped with exit code "+ec+"\n");
-      note(out+"\n");
-      note(new String(exec.getErrorStream().readAllBytes(), StandardCharsets.UTF_8));
-      return;
+      Process exec = Runtime.getRuntime().exec(new String[]{externalRunner, cFile.toString(), extOutFile.toString()});
+      String sessionOut = new String(exec.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+      String sessionErr = new String(exec.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
+      exec.waitFor();
+      
+      String extOut = Tools.readFile(extOutFile);
+      if (sessionOut.length()<2 || sessionOut.charAt(sessionOut.length()-2)!='0') {
+        note("Compilation failed:\n");
+        note(sessionOut);
+        note(sessionErr);
+        return;
+      }
+      note(sessionOut.substring(0, sessionOut.length()-2));
+      note(sessionErr);
+      out = extOut;
     }
+    
     String[] outParts = out.split(sep,-1);
     if (outParts.length!=2) {
-      note("Bad stdout:\n");
+      note("Bad execution stdout:\n");
       note(out);
       return;
     }
@@ -392,8 +419,20 @@ public class SiExecute {
     Path tmpIn = execDir.resolve("tmp.singeli");
     Path tmpOut = execDir.resolve("tmp.out");
     Tools.writeFile(tmpIn, src);
-    Process p = Runtime.getRuntime().exec(ir? new String[]{bqnExe, siFile, "-o", tmpOut.toString(), "-t", "ir", tmpIn.toString()}
-      : new String[]{bqnExe, siFile, "-o", tmpOut.toString(),             tmpIn.toString()});
+    
+    Vec<String> cmd = new Vec<>();
+    cmd.add(bqnExe);
+    cmd.add(siFile);
+    for (String c : singeliArgs) cmd.add(c);
+    cmd.add("-o");
+    cmd.add(tmpOut.toString());
+    if (ir) {
+      cmd.add("-t");
+      cmd.add("ir");
+    }
+    cmd.add(tmpIn.toString());
+    
+    Process p = Runtime.getRuntime().exec(cmd.toArray(new String[0]));
     String out = new String(p.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
     String err = new String(p.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
     return new String[]{Integer.toString(p.waitFor()), out, Tools.readFile(tmpOut), err};

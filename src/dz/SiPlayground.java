@@ -19,6 +19,8 @@ public class SiPlayground extends NodeWindow {
   
   public String bqn;
   public Path singeliPath;
+  public final String[] singeliArgs;
+  public final String externalRunner;
   public Path exec = Paths.get("exec/");
   
   private final CodeAreaNode code;
@@ -34,10 +36,12 @@ public class SiPlayground extends NodeWindow {
   
   public final ConcurrentLinkedQueue<Runnable> toRun = new ConcurrentLinkedQueue<>();
   
-  public SiPlayground(GConfig gc, Ctx pctx, PNodeGroup g, String bqn, Path singeliPath) {
+  public SiPlayground(GConfig gc, Ctx pctx, PNodeGroup g, String bqn, Path singeliPath, String[] singeliArgs, String externalRunner) {
     super(gc, pctx, g, new WindowInit("Singeli playground"));
     this.bqn = bqn;
     this.singeliPath = Files.isDirectory(singeliPath)? singeliPath.resolve("singeli") : singeliPath;
+    this.externalRunner = externalRunner;
+    this.singeliArgs = singeliArgs;
     code = (CodeAreaNode) base.ctx.id("code");
     noteNode = (CodeAreaNode) base.ctx.id("note");
     code.propsUpd();
@@ -124,8 +128,8 @@ public class SiPlayground extends NodeWindow {
   
   public static void main(String[] args) {
     Windows.setManager(Windows.Manager.JWM);
-    if (args.length!=2) {
-      System.out.println("Usage: ./run cbqn path/to/Singeli");
+    if (args.length<2) {
+      System.out.println("Usage: ./run [singeli args] [--runner path/to/runner] cbqn path/to/Singeli");
       return;
     }
     Windows.start(mgr -> {
@@ -142,7 +146,19 @@ public class SiPlayground extends NodeWindow {
       ctx.put("varfield", VarField::new);
       ctx.put("varlist", VarList::new);
       
-      SiPlayground w = new SiPlayground(gc, ctx, gc.getProp("si.ui").gr(), args[0], Paths.get(args[1]));
+      String runner = null;
+      Vec<String> singeliArgs = new Vec<>();
+      for (int i = 0; i < args.length-2; ) {
+        String c = args[i++];
+        if (c.equals("-a") || c.equals("-b")) {
+          singeliArgs.add(c);
+          singeliArgs.add(args[i++]);
+        } else if (c.equals("--runner")) {
+          runner = args[i++];
+        }
+      }
+      
+      SiPlayground w = new SiPlayground(gc, ctx, gc.getProp("si.ui").gr(), args[args.length-2], Paths.get(args[args.length-1]), singeliArgs.toArray(new String[0]), runner);
       mgr.start(w);
     });
   }
