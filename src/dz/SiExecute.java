@@ -273,7 +273,7 @@ public class SiExecute {
       note(siIROut[3]);
       return;
     }
-    String[] out0Parts = out0.split(sep+"\n", -1);
+    String[] out0Parts = out0.split("'"+sep+"'\n", -1);
     note(out0Parts[0]);
     String[] ts = Tools.split(out0Parts[1], '\n');
     for (int j = 0; j < newVarList.sz; j++) {
