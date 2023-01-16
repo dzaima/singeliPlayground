@@ -294,9 +294,9 @@ public class SiExecute {
         elt = ps[1];
       }
       char tchr = elt.charAt(0);
-      VTy vty = elt.equals("u1")? VTy.HEX : tchr=='i'? VTy.SIGNED : tchr=='f'? VTy.FLOAT : VTy.HEX;
+      VTy vty = elt.equals("u1")? VTy.UNSIGNED : tchr=='i'? VTy.SIGNED : tchr=='f'? VTy.FLOAT : VTy.HEX;
       int width = Integer.parseInt(elt.substring(1));
-      vars.add(new Var(r, name, new byte[count*width/8], width, vty, scalar));
+      vars.add(new Var(r, name, new byte[(count*width+7)/8], width, vty, scalar));
     }
     
     // generate variable I/O

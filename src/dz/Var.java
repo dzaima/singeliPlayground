@@ -16,7 +16,7 @@ public class Var {
   public final Vec<TVar> types = new Vec<>();
   
   public VTy typeQuality;
-  public int typeCount; // 0 for scalar; e.g. 4 for [4]f64
+  public int typeCount; // 1 for scalar; e.g. 4 for [4]f64
   public int typeWidth; // e.g. 64 for both f64 and [4]f64
   
   private final Vec<BtnNode> btns;
@@ -30,12 +30,12 @@ public class Var {
     this.data = data;
     n = r.base.ctx.make(r.gc.getProp("si.vlUI").gr());
     this.scalar = scalar;
-    types.add(new TVar(this, w0==1? 8 : w0, t0));
+    types.add(new TVar(this, w0==1? 8 : w0, w0==1? VTy.SIGNED : t0));
     nameNode = n.ctx.id("name");
     
     typeQuality = t0;
     typeWidth = w0;
-    typeCount = scalar? 0 : data.length*8/w0;
+    typeCount = scalar? 1 : data.length*8/w0;
     
     btns = new Vec<>();
     Node btnList = n.ctx.id("btns");
