@@ -147,7 +147,7 @@ public class SiExecute {
     HashMap<String, String> nameMap = new HashMap<>();
     HashSet<String> siExports = new HashSet<>();
     for (String l : Tools.split(siOut[2], '\n')) {
-      if (!l.startsWith(" ") && l.contains("(*")) {
+      if (!l.startsWith(" ") && l.contains("(*const")) {
         String[] ps = l.split("\\*const |\\) = |\\)|;");
         nameMap.put(ps[3], ps[1]);
         siExports.add(ps[1]);
@@ -435,7 +435,7 @@ public class SiExecute {
     Process p = Runtime.getRuntime().exec(cmd.toArray(new String[0]));
     String out = new String(p.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
     String err = new String(p.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
-    return new String[]{Integer.toString(p.waitFor()), out, Tools.readFile(tmpOut), err};
+    return new String[]{Integer.toString(p.waitFor()), out, Files.exists(tmpOut)? Tools.readFile(tmpOut) : "(no output)", err};
   }
   
   
