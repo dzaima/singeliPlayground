@@ -62,8 +62,8 @@ public class SiPlayground extends NodeWindow {
       s+= "def store{a:T, n, v & width{eltype{T}}==256 & isf64v{eltype{T}}} = emit{void, '_mm256_storeu_pd',     *f64~~emit{T, 'op +', a, n}, v}\n";
       s+= "def __add{a:T,b:T & T==[8]i32} = emit{T, '_mm256_add_epi32', a, b}\n";
       s+= "\n";
-      s+= "fn(x:*[8]i32) = load{x,10}+emit{[8]i32, '_mm256_set1_epi32', 1}\n";
-      s+= "'fn' = fn\n";
+      s+= "fn f(x:*[8]i32) = load{x,10}+emit{[8]i32, '_mm256_set1_epi32', 1}\n";
+      s+= "export{'f', f}\n";
       s+= "\n";
       s+= "⍎\n";
       s+= "\n";

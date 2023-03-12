@@ -258,7 +258,7 @@ public class SiExecute {
       }
       mainCode.append("  ").append(expr).append('\n');
     }
-    String codeStart = init+"\n__exec_fn() : void = {\n"+siRead+mainCode+"\n";
+    String codeStart = init+"\nfn __exec_fn() : void = {\n"+siRead+mainCode+"\n";
     
     // parse out the types of the variables
     status("generating IR...");
@@ -330,7 +330,7 @@ public class SiExecute {
     }
     
     status("generating C...");
-    String[] siCOut = runSi(codeStart+siWrites + "  \n}\n'exec_run'=__exec_fn", false);
+    String[] siCOut = runSi(codeStart+siWrites + "  \n}\nexport{'exec_run',__exec_fn}", false);
     if (!siCOut[0].equals("0")) { note("Failed second singeli build:\n"); note(siCOut[1]+"\n"); note(siCOut[3]+"\n"); return; }
     cInit.append(siCOut[2]);
     cInit.append("int main() {\n").append("\n  exec_run();\n").append(cWrite).append("\n}\n");
