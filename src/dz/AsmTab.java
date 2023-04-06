@@ -17,7 +17,7 @@ public class AsmTab extends SiTab {
     asmTab = r.ctx.make(r.gc.getProp("si.asmUI").gr());
     asmArea = (CodeAreaNode) asmTab.ctx.id("asm");
     asmCCFlags = (EditNode) asmTab.ctx.id("ccFlags");
-    asmArea.setLang(r.gc.langs().fromName("asm"));
+    asmArea.setLang(r.gc.langs().fromName("Assembly"));
     asmCCFlags.append(flags);
   }
   

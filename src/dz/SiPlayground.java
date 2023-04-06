@@ -148,7 +148,6 @@ public class SiPlayground extends NodeWindow {
           return "";
         });
       });
-      gc.langs().addLang("asm", AsmLang::new, "s");
       
       BaseCtx ctx = Ctx.newCtx();
       ctx.put("varfield", VarField::new);
