@@ -1,4 +1,10 @@
 si {
+  keys {
+    devtools = { "F12" }
+    run = { "ctrl+s" "ctrl+enter" "shift+enter" "alt+enter" }
+    fontPlus = { "ctrl+shift+=" "ctrl+plus" }
+    fontMinus = { "ctrl+minus" }
+  }
   ui = h { bg=bg.back
     v {
       scroll { bg=bg.bg1 codearea { id=code family="DejaVu Sans Mono" padLns=20 } }

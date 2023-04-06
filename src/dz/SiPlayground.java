@@ -176,17 +176,11 @@ public class SiPlayground extends NodeWindow {
   }
   
   public boolean key(Key key, int scancode, KeyAction a) {
-    if (a.press) {
-      if (key.k_enter() && !key.plain()  ||  key.k_s() && key.onlyCtrl()) {
-        run();
-        return true;
-      }
-      if (key.k_f12()) {
-        createTools();
-        return true;
-      }
-      if (key.onlyCtrl() && key.k_add()   && key.onKeypad()) { gc.setEM(gc.em+1); return true; }
-      if (key.onlyCtrl() && key.k_minus() && key.onKeypad()) { gc.setEM(gc.em-1); return true; }
+    switch (gc.keymap(key, a, "si")) {
+      case "devtools": createTools(); return true;
+      case "run": run(); return true;
+      case "fontPlus":  gc.setEM(gc.em+1); return true;
+      case "fontMinus": gc.setEM(gc.em-1); return true;
     }
     return super.key(key, scancode, a);
   }
