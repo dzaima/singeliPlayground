@@ -105,7 +105,7 @@ public class SiExecute {
         while (nEnd<l.length() && Character.isUnicodeIdentifierPart(l.charAt(nEnd))) nEnd++;
         String name = l.substring(szEnd+1, nEnd);
         defsC.append(tC).append(' ').append(name).append("[] = {").append(l.substring(nEnd)).append("};\n");
-        defsSi.append("  def ").append(name).append(" = emit{*").append(tSi).append(", '', '").append(name).append("'}\n");
+        defsSi.append("  def ").append(name).append(" = emit{*").append(tSi).append(", '', '").append(name).append("'};");
       } else if (l.equals("⍎")) {
         curr = bodySi;
       } else {
@@ -231,7 +231,7 @@ public class SiExecute {
       
       String ln = "  "+name+":= load{emit{*"+v.type()+", 'EXEC_G', '"+name+"'}, 0}";
       
-      siRead.append(ln).append('\n');
+      siRead.append(ln).append(';');
       
     }
     
@@ -248,7 +248,7 @@ public class SiExecute {
         String name = c.substring(0, pS);
         for (int j = 0; j < name.length(); j++) if (!Character.isUnicodeIdentifierPart(name.charAt(j))) break def;
         boolean had = varSet.contains(name);
-        if (had && onlyInit) continue;
+        if (had && onlyInit) { mainCode.append('\n'); continue; }
         if (!had) {
           varSet.add(newVarList.add(name));
           showType.append("show{type{").append(name).append("}};");
@@ -258,7 +258,7 @@ public class SiExecute {
       }
       mainCode.append("  ").append(expr).append('\n');
     }
-    String codeStart = init+"\nfn __exec_fn() : void = {\n"+siRead+mainCode+"\n";
+    String codeStart = init+(init.length()==0 || init.endsWith("\n")? "" : "\n")+"fn __exec_fn() : void = {"+siRead+mainCode+";";
     
     // parse out the types of the variables
     status("generating IR...");
@@ -279,7 +279,12 @@ public class SiExecute {
     for (int j = 0; j < newVarList.sz; j++) {
       String name = newVarList.get(j);
       String ty = ts[ts.length-1 - newVarList.sz + j];
+      if (ty.startsWith("(")) {
+        note("Cannot display tuple variable "+name);
+        continue;
+      }
       String[] ps = Tools.split(ty, ']');
+      
       
       int count;
       boolean scalar;
