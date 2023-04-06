@@ -7,6 +7,7 @@ import dzaima.ui.gui.io.*;
 import dzaima.ui.node.Node;
 import dzaima.ui.node.ctx.*;
 import dzaima.ui.node.types.editable.code.CodeAreaNode;
+import dzaima.ui.node.types.tabs.TabbedNode;
 import dzaima.utils.*;
 import io.github.humbleui.skija.Surface;
 
@@ -25,14 +26,13 @@ public class SiPlayground extends NodeWindow {
   
   private final CodeAreaNode code;
   public final CodeAreaNode noteNode;
-  public final Node tabPlace;
   
   public final Node varTab;
   private final VarList varsNode;
   public final Vec<Var> vars = new Vec<>();
   
-  public final Vec<Tab> tabs = new Vec<>();
-  public Tab cTab;
+  TabbedNode tabsRight;
+  public final Vec<SiTab> tabs = new Vec<>();
   
   public final ConcurrentLinkedQueue<Runnable> toRun = new ConcurrentLinkedQueue<>();
   
@@ -91,17 +91,16 @@ public class SiPlayground extends NodeWindow {
     varTab = ctx.make(gc.getProp("si.varsUI").gr());
     varsNode = (VarList) varTab.ctx.id("vars");
     varsNode.r = this;
-    
-    
-    tabPlace = base.ctx.id("tabPlace");
-    
-    new VarsTab(this).addTab("variables");
-    new AsmTab(this).addTab("assembly 1");
-    new AsmTab(this).addTab("assembly 2");
-    new AsmTab(this).addTab("assembly 3");
-    new IRTab(this).addTab("IR");
-    
-    tabs.get(0).open();
+  
+  
+    tabsRight = (TabbedNode) base.ctx.id("tabsRight");
+    tabsRight.addSelectedTab(new VarsTab(this, "variables"));
+    tabsRight.addTab(new AsmTab(this, "assembly 1",    "cc -O3 -masm=intel -march=native"));
+    tabsRight.addTab(new AsmTab(this, "assembly 2", "clang -O3 -masm=intel"));
+    tabsRight.addTab(new AsmTab(this, "assembly 3", "clang -O3 -masm=intel -march=native"));
+    tabsRight.addTab(new AsmTab(this, "assembly 4",   "gcc -O3 -masm=intel"));
+    tabsRight.addTab(new AsmTab(this, "assembly 5",   "gcc -O3 -masm=intel -march=native"));
+    tabsRight.addTab(new IRTab(this, "IR"));
     
     updVars();
   }
@@ -112,7 +111,7 @@ public class SiPlayground extends NodeWindow {
       prev.cancel();
       prev = null;
     }
-    SiExecute x = new SiExecute(this, file, cTab);
+    SiExecute x = new SiExecute(this, file, (SiTab) tabsRight.cTab());
     prev = x;
     String src = code.getAll();
     x.start(src);

@@ -6,24 +6,19 @@ import dzaima.ui.node.types.editable.code.CodeAreaNode;
 import dzaima.ui.node.types.ScrollNode;
 import dzaima.utils.XY;
 
-public class AsmTab extends Tab {
+public class AsmTab extends SiTab {
   
   private final Node asmTab;
   public final CodeAreaNode asmArea;
   public final EditNode asmCCFlags;
   
-  public AsmTab(SiPlayground r) {
-    super(r);
+  public AsmTab(SiPlayground r, String title, String flags) {
+    super(r, title);
     asmTab = r.ctx.make(r.gc.getProp("si.asmUI").gr());
     asmArea = (CodeAreaNode) asmTab.ctx.id("asm");
     asmCCFlags = (EditNode) asmTab.ctx.id("ccFlags");
     asmArea.setLang(r.gc.langs().fromName("asm"));
-  }
-  
-  public void opened() {
-    r.tabPlace.replace(0, asmTab);
-    asmArea.removeAll();
-    r.run();
+    asmCCFlags.append(flags);
   }
   
   public void setContents(String s) {
@@ -43,7 +38,9 @@ public class AsmTab extends Tab {
     return 1;
   }
   
-  public Node mainNode() {
+  public Node show() {
+    asmArea.removeAll();
+    r.run();
     return asmTab;
   }
 }

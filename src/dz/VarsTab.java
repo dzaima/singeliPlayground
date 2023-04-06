@@ -2,16 +2,12 @@ package dz;
 
 import dzaima.ui.node.Node;
 
-public class VarsTab extends Tab {
-  protected VarsTab(SiPlayground r) {
-    super(r);
+public class VarsTab extends SiTab {
+  protected VarsTab(SiPlayground r, String title) {
+    super(r, title);
   }
   
-  public void opened() {
-    
-  }
-  
-  public Node mainNode() {
+  public Node show() {
     return r.varTab;
   }
   

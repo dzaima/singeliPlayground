@@ -19,9 +19,9 @@ public class SiExecute {
   public final String[] singeliArgs;
   public final String[] ccFlags;
   int mode;
-  private final Tab tab;
+  private final SiTab tab;
   
-  SiExecute(SiPlayground r, Path src, Tab tab) {
+  SiExecute(SiPlayground r, Path src, SiTab tab) {
     this.r = r;
     this.vars = r.vars.map(x->x);
     
@@ -119,6 +119,8 @@ public class SiExecute {
   }
   
   public static Pattern labelPattern = Pattern.compile("^(.?[a-zA-Z0-9_$]+):");
+  public static Pattern endProc = Pattern.compile("^(\\s*(\\.cfi_endproc|\\.Lfunc_end))");
+  public static Pattern endAll = Pattern.compile("^(\\s*(\\.ident))");
   public static Pattern ignored = Pattern.compile("^(#|\t\\.(section|p2align|text|type|size|globl|addrsig|addrsig_sym|intel_syntax|file|cfi_.+)\\b|\\s*# kill:)");
   public void execAsm(String defsC, String defsSi, String init, String body) throws Exception {
     status("generating C...");
@@ -170,11 +172,11 @@ public class SiExecute {
           output = false;
         }
       }
+  
+      if (endAll.matcher(l).find()) break;
+      if (endProc.matcher(l).find()) output = false;
+      if (!output || ignored.matcher(l).find()) continue;
       
-      if (ignored.matcher(l).find()) continue;
-      if (l.startsWith(".Lfunc_end")) output = false; // asm boilerplate
-      
-      if (!output) continue;
       // expand tabs to spaces
       String[] ps = Tools.split(l, '\t');
       int len = 0;

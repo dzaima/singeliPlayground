@@ -3,22 +3,16 @@ package dz;
 import dzaima.ui.node.Node;
 import dzaima.ui.node.types.editable.code.CodeAreaNode;
 
-public class IRTab extends Tab {
+public class IRTab extends SiTab {
   
   private final Node irTab;
   public final CodeAreaNode irArea;
   
-  public IRTab(SiPlayground r) {
-    super(r);
+  public IRTab(SiPlayground r, String title) {
+    super(r, title);
     irTab = r.ctx.make(r.gc.getProp("si.irUI").gr());
     irArea = (CodeAreaNode) irTab.ctx.id("ir");
     irArea.setLang(r.gc.langs().fromName("singeli"));
-  }
-  
-  public void opened() {
-    r.tabPlace.replace(0, irTab);
-    irArea.removeAll();
-    r.run();
   }
   
   public void setContents(String s) {
@@ -29,7 +23,9 @@ public class IRTab extends Tab {
     return 2;
   }
   
-  public Node mainNode() {
+  public Node show() {
+    irArea.removeAll();
+    r.run();
     return irTab;
   }
 }
