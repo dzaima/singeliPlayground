@@ -100,7 +100,8 @@ public class SiPlayground extends NodeWindow {
     tabsRight.addTab(new AsmTab(this, "assembly 3", "clang -O3 -masm=intel -march=native"));
     tabsRight.addTab(new AsmTab(this, "assembly 4",   "gcc -O3 -masm=intel"));
     tabsRight.addTab(new AsmTab(this, "assembly 5",   "gcc -O3 -masm=intel -march=native"));
-    tabsRight.addTab(new IRTab(this, "IR"));
+    tabsRight.addTab(new IRTab(this, false, "IR"));
+    tabsRight.addTab(new IRTab(this, true, "C"));
     
     updVars();
   }

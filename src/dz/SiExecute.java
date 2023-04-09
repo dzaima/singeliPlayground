@@ -114,7 +114,7 @@ public class SiExecute {
     }
     if (mode==0) execVars(defsC.toString(), defsSi.toString(), initSi.toString(), bodySi.toString());
     else if (mode==1) execAsm(defsC.toString(), defsSi.toString(), initSi.toString(), bodySi.toString());
-    else if (mode==2) execIR(defsC.toString(), defsSi.toString(), initSi.toString(), bodySi.toString());
+    else if (mode==2 || mode==3) execView(defsC.toString(), defsSi.toString(), initSi.toString(), bodySi.toString(), mode==3);
     else note("Unknown mode!");
   }
   
@@ -197,9 +197,9 @@ public class SiExecute {
     });
     
   }
-  public void execIR(String defsC, String defsSi, String init, String body) throws Exception {
+  public void execView(String defsC, String defsSi, String init, String body, boolean c) throws Exception {
     status("generating IR...");
-    String[] siOut = runSi(init, true);
+    String[] siOut = runSi(init, !c);
     if (!siOut[0].equals("0")) {
       note("Failed to build Singeli:\n");
       note(siOut[1]+"\n");
