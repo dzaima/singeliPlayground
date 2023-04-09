@@ -6,10 +6,11 @@ si {
     fontMinus = { "ctrl+minus" }
   }
   ui = h { bg=bg.back
-    v {
-      scroll { bg=bg.bg1 codearea { id=code family="DejaVu Sans Mono" padLns=20 } }
-      vsep{x=0em y=0em}
-      scroll { codearea { id=note family="DejaVu Sans Mono" numbering=false } weight=0.4 }
+    pad {
+      weighed { dir=v weight=0.7 handleWidth=0.2em padCol=#424244 pad=.05em
+        scroll { bg=bg.bg1 codearea { id=code family="DejaVu Sans Mono" padLns=20 } }
+        scroll { codearea { id=note family="DejaVu Sans Mono" numbering=false } }
+      }
     }
     hsep{x=0em y=0em}
     v {
