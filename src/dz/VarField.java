@@ -28,12 +28,14 @@ public class VarField extends TextFieldNode {
   public boolean enter(int mod) {
     long[] vs = new long[tvar.count];
     for (int j = 0; j < tvar.count; j++) {
-      String s = tvar.fs.get(j).getAll();
+      String s = tvar.fs.get(j).getAll().replace("_","");
       long c;
       try {
         VTy parseType = tvar.type;
+        boolean reverse = false;
         if (s.startsWith("0x")) { s=s.substring(2); parseType=VTy.HEX; }
         if (s.startsWith("0b")) { s=s.substring(2); parseType=VTy.BIN; }
+        if (s.startsWith("m")) { s=s.substring(1); parseType=VTy.BIN; s = new StringBuilder(s).reverse().toString(); }
         switch (parseType) {
           case BIN: c = Long.parseUnsignedLong(s, 2); break;
           case HEX: c = Long.parseUnsignedLong(s, 16); break;

@@ -30,13 +30,14 @@ public class TVar {
       l.add(fn);
     }
     BtnNode next = (BtnNode) n.ctx.id("ty");
+    boolean binOpt = v.scalar || v.typeWidth==1;
     next.setFn(b -> {
       if (type!=VTy.FLOAT) {
         switch (type) {
-          case SIGNED:   type = VTy.UNSIGNED;break;
+          case SIGNED:   type = VTy.UNSIGNED; break;
           case UNSIGNED: type = VTy.HEX; break;
-          case HEX:      type = v.scalar? VTy.BIN : VTy.SIGNED; break;
-          case BIN:      type =                     VTy.SIGNED; break;
+          case HEX:      type = binOpt? VTy.BIN : VTy.SIGNED; break;
+          case BIN:      type =                   VTy.SIGNED; break;
         }
         v.updTitle();
         updData();
@@ -73,7 +74,14 @@ public class TVar {
         }
         case BIN: {
           String s = Long.toBinaryString(c);
-          nv = Tools.repeat('0', width-s.length()) + s;
+          s = Tools.repeat('0', width-s.length()) + s;
+          StringBuilder b = new StringBuilder();
+          for (int j = 0; j < s.length(); j+= 8) {
+            if (j!=0) b.append("_");
+            b.append(s.substring(j, Math.min(s.length(), j+8)));
+          }
+          if (v.scalar) nv = b.toString();
+          else nv = "m"+b.reverse().toString();
           break;
         }
         default:
