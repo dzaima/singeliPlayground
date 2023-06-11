@@ -58,8 +58,11 @@ si {
     btn { id=ty
       text { id=tyTxt family="DejaVu Sans Mono" "?" }
     }
-    id=list
+    v { pad=0.2em
+      id=list
+    }
   }
+  hlPart = h { pad=0.2em }
 }
 
 coloredBtn {

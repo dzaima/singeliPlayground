@@ -20,14 +20,20 @@ public class TVar {
     this.width = width;
     this.type = t0;
     n = v.n.ctx.make(v.r.gc.getProp("si.hlUI").gr());
-    Node l = n.ctx.id("list");
+    Node vl = n.ctx.id("list");
     count = v.data.length*8/width;
-    for (int i = 0; i < count; i++) {
-      Node fn = l.ctx.make(l.gc.getProp("si.numUI").gr());
-      VarField n = (VarField) fn.ctx.id("field");
-      n.tvar = this;
-      fs.add(n);
-      l.add(fn);
+    int hc = 32 / (width/8);
+    hc = Math.min(count, hc);
+    for (int i = 0; i < count/hc; i++) {
+      Node hl = v.n.ctx.make(v.r.gc.getProp("si.hlPart").gr());
+      for (int j = 0; j < hc; j++) {
+        Node fn = vl.ctx.make(vl.gc.getProp("si.numUI").gr());
+        VarField n = (VarField) fn.ctx.id("field");
+        n.tvar = this;
+        fs.add(n);
+        hl.add(fn);
+      }
+      vl.add(hl);
     }
     BtnNode next = (BtnNode) n.ctx.id("ty");
     boolean binOpt = v.scalar || v.typeWidth==1;
