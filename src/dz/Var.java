@@ -35,11 +35,17 @@ public class Var {
     
     typeQuality = t0;
     typeWidth = w0;
-    typeCount = scalar? 1 : data.length*8/w0;
+    int bitCount = data.length*8;
+    typeCount = scalar? 1 : bitCount/w0;
     
     btns = new Vec<>();
     Node btnList = n.ctx.id("btns");
     for (String btnName : new String[]{"8","16","32","64","f32","f64","X"}) {
+      if (btnName.startsWith("f") && !scalar && typeWidth==1) continue;
+      if (!btnName.equals("X")) {
+        int cw = Integer.parseInt(btnName.startsWith("f")? btnName.substring(1) : btnName);
+        if (cw > bitCount) continue;
+      }
       BtnNode b = new BtnNode(btnList.ctx, BTN_KS, BTN_VS);
       btnList.add(b);
       b.add(new StringNode(b.ctx, btnName));
