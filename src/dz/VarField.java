@@ -58,6 +58,11 @@ public class VarField extends TextFieldNode {
       int i = v.indexOf(this);
       i+= key.hasShift()? -1 : 1;
       if (i>=0 && i<v.sz) {
+        um.pushU("clear selection");
+        collapseCursors(true);
+        cs.get(0).mv(0, 0);
+        um.pop();
+        
         VarField n = v.get(i);
         ctx.win().focus(n);
         n.um.pushU("select all");
