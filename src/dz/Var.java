@@ -30,13 +30,14 @@ public class Var {
     this.data = data;
     n = r.base.ctx.make(r.gc.getProp("si.vlUI").gr());
     this.scalar = scalar;
-    types.add(new TVar(this, w0==1? 8 : w0, w0==1? VTy.SIGNED : t0));
     nameNode = n.ctx.id("name");
     
     typeQuality = t0;
     typeWidth = w0;
     int bitCount = data.length*8;
     typeCount = scalar? 1 : bitCount/w0;
+    
+    types.add(new TVar(this, w0==1? Math.min(64, bitCount) : w0, w0==1? VTy.BIN : t0));
     
     btns = new Vec<>();
     Node btnList = n.ctx.id("btns");
