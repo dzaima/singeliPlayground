@@ -59,7 +59,7 @@ public class TVar {
     long[] vs = v.read(width);
     for (int i = 0; i < vs.length; i++) {
       EditNode n = fs.get(i);
-      if (n == v.r.focusNode) continue;
+      if (n == v.r.focusNode()) continue;
       long c = vs[i];
       String nv;
       switch (type) {
