@@ -6,23 +6,24 @@ si {
     fontMinus = { "ctrl+minus" }
   }
   ui = h { bg=bg.back
-    pad {
-      weighed { dir=v weight=0.7 handleWidth=0.2em padCol=#424244 pad=.05em
-        scroll { bg=bg.bg1 codearea { id=code family="DejaVu Sans Mono" padLns=20 } }
-        scroll { codearea { id=note family="DejaVu Sans Mono" numbering=false } }
+    weighed { dir=h
+      pad {
+        weighed { dir=v weight=0.7 handleWidth=0.2em padCol=#424244 pad=.05em
+          scroll { bg=bg.bg1 codearea { id=code family="DejaVu Sans Mono" padLns=20 } }
+          scroll { codearea { id=note family="DejaVu Sans Mono" numbering=false } }
+        }
       }
-    }
-    hsep{x=0em y=0em}
-    v {
-      tabbed { dir=h mode=drag pad=.2em
-        id=tabsRight
+      v {
+        tabbed { dir=h mode=drag pad=.2em
+          id=tabsRight
+        }
       }
     }
   }
   
   varsUI = pad { u=0.5em l=0.5em
     scroll { x=off
-      varlist { pad=.7em dir=v mode=drag w=min
+      varlist { pad=.7em dir=v mode=drag w=max
         id=vars
       }
     }
@@ -62,7 +63,7 @@ si {
       id=list
     }
   }
-  hlPart = h { pad=0.2em }
+  hlPart = dividable { w=max pad=0.2em }
 }
 
 coloredBtn {
