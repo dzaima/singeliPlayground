@@ -22,6 +22,8 @@ public class SiPlayground extends NodeWindow {
   public Path singeliPath;
   public final String[] singeliArgs;
   public final String externalRunner;
+  public final int scalableCount;
+  public final boolean hasScalable;
   public Path exec = Paths.get("exec/");
   
   private final CodeAreaNode code;
@@ -36,11 +38,14 @@ public class SiPlayground extends NodeWindow {
   
   public final ConcurrentLinkedQueue<Runnable> toRun = new ConcurrentLinkedQueue<>();
   
-  public SiPlayground(GConfig gc, Ctx pctx, PNodeGroup g, String bqn, Path singeliPath, String[] singeliArgs, String externalRunner) {
+  public SiPlayground(GConfig gc, Ctx pctx, PNodeGroup g, String bqn, Path singeliPath, String[] singeliArgs, String externalRunner, int scalableCount) {
     super(gc, pctx, g, new WindowInit("Singeli playground"));
+    gc.langs().addLang("number", NumLang::new);
     this.bqn = bqn;
     this.singeliPath = Files.isDirectory(singeliPath)? singeliPath.resolve("singeli") : singeliPath;
     this.externalRunner = externalRunner;
+    this.hasScalable = scalableCount!=-1;
+    this.scalableCount = hasScalable? scalableCount : 1;
     this.singeliArgs = singeliArgs;
     code = (CodeAreaNode) base.ctx.id("code");
     noteNode = (CodeAreaNode) base.ctx.id("note");
@@ -153,20 +158,30 @@ public class SiPlayground extends NodeWindow {
       BaseCtx ctx = Ctx.newCtx();
       ctx.put("varfield", VarField::new);
       ctx.put("varlist", VarList::new);
+      ctx.put("dividable", DividableNode::new);
       
       String runner = null;
+      int scalableCount = -1;
       Vec<String> singeliArgs = new Vec<>();
       for (int i = 0; i < args.length-2; ) {
         String c = args[i++];
-        if (c.equals("-a") || c.equals("-b")) {
-          singeliArgs.add(c);
-          singeliArgs.add(args[i++]);
-        } else if (c.equals("--runner")) {
-          runner = args[i++];
+        switch (c) {
+          default: throw new IllegalStateException("Unexpected argument "+c);
+          case "-a":
+          case "-b":
+            singeliArgs.add(c);
+            singeliArgs.add(args[i++]);
+            break;
+          case "--runner":
+            runner = args[i++];
+            break;
+          case "--scale":
+            scalableCount = Integer.parseInt(args[i++]);
+            break;
         }
       }
       
-      SiPlayground w = new SiPlayground(gc, ctx, gc.getProp("si.ui").gr(), args[args.length-2], Paths.get(args[args.length-1]), singeliArgs.toArray(new String[0]), runner);
+      SiPlayground w = new SiPlayground(gc, ctx, gc.getProp("si.ui").gr(), args[args.length-2], Paths.get(args[args.length-1]), singeliArgs.toArray(new String[0]), runner, scalableCount);
       mgr.start(w);
     });
   }

@@ -2,7 +2,7 @@ package dz;
 
 import dzaima.ui.node.Node;
 import dzaima.ui.node.types.*;
-import dzaima.ui.node.types.editable.*;
+import dzaima.ui.node.types.editable.EditNode;
 import dzaima.utils.*;
 
 public class TVar {

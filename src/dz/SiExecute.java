@@ -215,6 +215,49 @@ public class SiExecute {
     
   }
   
+  
+  String egp(String type, String n) { return "emit{*"+type+", 'EXEC_G', '"+n+"'}"; }
+  int rvBool(Var v) {
+    return 128*r.scalableCount / v.elementCount(); 
+  }
+  String rvEl(Var v) {
+    VTy q = v.typeQuality;
+    String s = q==VTy.SIGNED? "i" : q==VTy.FLOAT? "f" : "u";
+    s+= v.typeWidth+"m";
+    int sc = v.bitCount()/r.scalableCount;
+    if (sc>=128) s+= sc/128;
+    else s+= "f"+(128/sc);
+    return s;
+  } 
+  
+  String storeVar(Var v, String n) {
+    if (v.scalar) {
+      return "  store_n{"+egp("u8",n)+", "+v.data.length+", emit{*void, '&', "+n+"}}";
+    }
+    if (!r.hasScalable) {
+      String bt = "["+(v.bitCount()/8)+"]u8";
+      return "  store{"+egp(bt,n)+", 0, reinterpret{"+bt+", "+n+"}}";
+    } else {
+      if (v.typeWidth==1) {
+        return "emit{void, '__riscv_vsm_v_b"+rvBool(v)+"', "+egp("void",n)+", "+n+", "+v.elementCount()+"}";
+      } else {
+        return "emit{void, '__riscv_vse"+v.typeWidth+"_v_"+rvEl(v)+"', "+egp("void",n)+", "+n+", "+v.elementCount()+"}";
+      }
+    }
+  }
+  String loadVar(String n, Var v) {
+    if (!r.hasScalable || v.scalar) {
+      return "  "+n+":= load{"+egp(v.type(),n)+", 0}";
+    } else {
+      if (v.typeWidth==1) {
+        return "  "+n+":= emit{"+v.type()+", '__riscv_vlm_v_b"+rvBool(v)+"', "+egp("void",n)+", "+v.elementCount()+"}";
+      } else {
+        return "  "+n+":= emit{"+v.type()+", '__riscv_vle"+v.typeWidth+"_v_"+rvEl(v)+"', "+egp("void",n)+", "+v.elementCount()+"}";
+        // return "  "+name+":= reinterpret{"+v.type()+", emit{"+v.byteType()+", '__riscv_vle8_v_u8m"+v.mul(true)+"', emit{*void, 'EXEC_G', '"+name+"'}, "+v.data.length+"}}";
+      }
+    }
+  }
+  
   public void execVars(String defsC, String defsSi, String init, String body) throws Throwable {
     status("generating source...");
     String sep = "<singeli playground stdout separator>";
@@ -231,7 +274,7 @@ public class SiExecute {
       varSet.add(name);
       showType.append("show{type{").append(name).append("}};");
       
-      String ln = "  "+name+":= load{emit{*"+v.type()+", 'EXEC_G', '"+name+"'}, 0}";
+      String ln = loadVar(name, v);
       
       siRead.append(ln).append(';');
       
@@ -297,7 +340,7 @@ public class SiExecute {
         elt = ps[0];
       } else {
         scalar = false;
-        count = Integer.parseInt(ps[0].substring(1));
+        count = Integer.parseInt(ps[0].substring(1)) * r.scalableCount;
         elt = ps[1];
       }
       char tchr = elt.charAt(0);
@@ -321,12 +364,7 @@ public class SiExecute {
       }
       cInit.append("};\n");
       
-      String ln;
-      if (v.scalar) {
-        ln = "  store_n{emit{*u8, 'EXEC_G', '"+v.name+"'}, "+v.data.length+", emit{*void, '&', "+v.name+"}}";
-      } else {
-        ln = "  store{emit{*"+v.byteType()+", 'EXEC_G', '"+v.name+"'}, 0, reinterpret{"+v.byteType()+", "+v.name+"}}";
-      }
+      String ln = storeVar(v, v.name);
       
       cWrite.append("  for (int i = 0; i < ").append(v.data.length).append("; i++)")
         .append("printf(\"%d \", (signed char)").append(cName).append("[i]);\n");

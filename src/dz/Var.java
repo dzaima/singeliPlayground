@@ -82,7 +82,7 @@ public class Var {
   
   public void updTitle() {
     nameNode.clearCh();
-    nameNode.add(new StringNode(n.ctx, name+" : "+type()));
+    nameNode.add(new StringNode(n.ctx, name+" : "+type(true)));
   }
   public void updList() {
     updTitle();
@@ -130,16 +130,19 @@ public class Var {
   }
   
   public String type() {
-    // if (types.sz==0) return "["+(data.length/4)+"]i32";
-    // TVar t = types.get(0);
-    // String elt = (t.type==VTy.SIGNED?"i":t.type==VTy.FLOAT?"f":"u")+t.width;
-    // if (scalar) return elt;
-    // return "["+(data.length/(t.width/8))+"]"+elt;
+    return type(false);
+  }
+  public String type(boolean includeScale) {
     String elt = (typeQuality==VTy.SIGNED?"i":typeQuality==VTy.FLOAT?"f":"u")+typeWidth;
     if (scalar) return elt;
-    else return "["+typeCount+"]"+elt;
+    String sc = includeScale && r.scalableCount!=1? r.scalableCount+"×" : "";
+    return sc+"["+(elementCount()/r.scalableCount)+"]"+elt;
   }
-  public String byteType() {
-    return "["+data.length+"]u8";
+  
+  public int bitCount() {
+    return data.length*8;
+  }
+  public int elementCount() {
+    return data.length*8/typeWidth;
   }
 }

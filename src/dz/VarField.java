@@ -4,14 +4,15 @@ import dzaima.ui.gui.io.*;
 import dzaima.ui.gui.undo.UndoFrame;
 import dzaima.ui.node.ctx.Ctx;
 import dzaima.ui.node.prop.Prop;
-import dzaima.ui.node.types.editable.TextFieldNode;
+import dzaima.ui.node.types.editable.code.CodeFieldNode;
 import dzaima.utils.Vec;
 
-public class VarField extends TextFieldNode {
+public class VarField extends CodeFieldNode {
   public TVar tvar;
   
   public VarField(Ctx ctx, String[] ks, Prop[] vs) {
     super(ctx, ks, vs);
+    setLang(gc.langs().fromName("number"));
   }
   
   UndoFrame pFrame;
@@ -32,7 +33,6 @@ public class VarField extends TextFieldNode {
       long c;
       try {
         VTy parseType = tvar.type;
-        boolean reverse = false;
         if (s.startsWith("0x")) { s=s.substring(2); parseType=VTy.HEX; }
         if (s.startsWith("0b")) { s=s.substring(2); parseType=VTy.BIN; }
         if (s.startsWith("m")) { s=s.substring(1); parseType=VTy.BIN; s = new StringBuilder(s).reverse().toString(); }
@@ -54,7 +54,7 @@ public class VarField extends TextFieldNode {
     return true;
   }
   
-  public boolean keyF2(Key key, int scancode, KeyAction a) {
+  public int action(Key key, KeyAction a) {
     if ((key.k_tab() || key.k_space()) && a.press) {
       Vec<VarField> v = tvar.fs;
       int i = v.indexOf(this);
@@ -72,13 +72,13 @@ public class VarField extends TextFieldNode {
         n.cs.get(0).mv(0, 0, n.lns.get(0).sz(), 0);
         n.um.pop();
       }
-      return true;
+      return 1;
     }
-    return super.keyF2(key, scancode, a);
+    return super.action(key, a);
   }
   
   public void typed(int codepoint) {
     if (codepoint==' ') return;
     super.typed(codepoint);
-  }
+  }  
 }
