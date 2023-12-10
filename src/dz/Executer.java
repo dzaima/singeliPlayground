@@ -104,7 +104,7 @@ public abstract class Executer {
     boolean inREPL = false;
     for (String l : Tools.split(siCode, '\n')) {
       if (l.startsWith("cinit ")) {
-        c.append(l.substring(6));
+        c.append(l.substring(6)).append('\n');
       } else if (l.equals("⍎")) {
         if (inREPL) throw new ExpException("Multiple ⍎s found");
         inREPL = true;
