@@ -28,9 +28,6 @@ public class AsmTab extends SiExecTab {
   public void setContents(String s) {
     TextOutTab.setContents(asmArea, s);
   }
-  public int mode() {
-    return 1;
-  }
   
   public Node show() {
     asmArea.removeAll();

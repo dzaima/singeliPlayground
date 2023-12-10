@@ -8,5 +8,4 @@ public abstract class SiExecTab extends SiTab {
   }
   
   public abstract Executer prep(String src, Runnable onDone);
-  public abstract int mode();
 }

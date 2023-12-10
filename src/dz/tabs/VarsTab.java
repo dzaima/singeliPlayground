@@ -27,11 +27,6 @@ public class VarsTab extends SiExecTab {
     return "variables";
   }
   
-  public int mode() {
-    return 0;
-  }
-  
-  
   
   public Executer prep(String src, Runnable onDone) {
     Vec<Var> vars = p.vars.map(Var::copy);
