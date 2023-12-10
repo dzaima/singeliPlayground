@@ -1,25 +1,27 @@
 package dz.tabs;
 
 import dz.*;
+import dzaima.ui.gui.PartialMenu;
 import dzaima.ui.node.Node;
 import dzaima.ui.node.types.editable.EditNode;
 import dzaima.ui.node.types.editable.code.CodeAreaNode;
 import dzaima.ui.node.types.ScrollNode;
 import dzaima.utils.XY;
 
-public class AsmTab extends SiTab {
-  
-  private final Node asmTab;
+public class AsmTab extends SiExecTab {
+  private final Node node;
+  public String title;
   public final CodeAreaNode asmArea;
-  public final EditNode asmCCFlags;
+  public final EditNode command;
   
   public AsmTab(SiPlayground r, String title, String flags) {
-    super(r, title);
-    asmTab = r.ctx.make(r.gc.getProp("si.asmUI").gr());
-    asmArea = (CodeAreaNode) asmTab.ctx.id("asm");
-    asmCCFlags = (EditNode) asmTab.ctx.id("ccFlags");
+    super(r);
+    this.title = title;
+    node = r.ctx.make(r.gc.getProp("si.asmUI").gr());
+    asmArea = (CodeAreaNode) node.ctx.id("asm");
+    command = (EditNode) node.ctx.id("ccFlags");
     asmArea.setLang(r.gc.langs().fromName("Assembly"));
-    asmCCFlags.append(flags);
+    command.append(flags);
   }
   
   public void setContents(String s) {
@@ -41,7 +43,18 @@ public class AsmTab extends SiTab {
   
   public Node show() {
     asmArea.removeAll();
-    r.run();
-    return asmTab;
+    p.run();
+    return node;
+  }
+  
+  public String name() {
+    return title;
+  }
+  
+  public void preMenuOptions(PartialMenu m) {
+    m.addField(title, s -> {
+      title = s;
+      nameUpdated();
+    });
   }
 }

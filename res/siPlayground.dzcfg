@@ -6,15 +6,7 @@ si {
     fontMinus = { "ctrl+minus" }
   }
   ui = h { bg=bg.back
-    windowSplit { dir=h
-      windowSplit { dir=v weight=0.7 handleWidth=0.2em padCol=#424244 pad=.05em
-        tabbed { id=sourceTab }
-        tabbed { id=outputTab }
-      }
-      tabbed {
-        id=tabsRight
-      }
-    }
+    id=place
   }
   
   sourceTab = scroll { bg=bg.bg1 codearea { id=code family="DejaVu Sans Mono" padLns=20 } }

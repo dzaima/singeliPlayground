@@ -1,16 +1,25 @@
 package dz.tabs;
 
-import dz.SiPlayground;
-import dz.tabs.SiTab;
+import dz.*;
 import dzaima.ui.node.Node;
 
-public class VarsTab extends SiTab {
-  protected VarsTab(SiPlayground r, String title) {
-    super(r, title);
+public class VarsTab extends SiExecTab {
+  private final Node node;
+  public final VarList varsNode;
+  
+  public VarsTab(SiPlayground r) {
+    super(r);
+    node = ctx.make(r.gc.getProp("si.varsUI").gr());
+    varsNode = (VarList) node.ctx.id("vars");
+    varsNode.r = r;
   }
   
   public Node show() {
-    return r.varTab;
+    return node;
+  }
+  
+  public String name() {
+    return "variables";
   }
   
   public int mode() {

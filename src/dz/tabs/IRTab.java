@@ -4,14 +4,14 @@ import dz.*;
 import dzaima.ui.node.Node;
 import dzaima.ui.node.types.editable.code.CodeAreaNode;
 
-public class IRTab extends SiTab {
+public class IRTab extends SiExecTab {
   
   private final Node irTab;
   private final boolean c;
   public final CodeAreaNode irArea;
   
-  public IRTab(SiPlayground r, boolean c, String title) {
-    super(r, title);
+  public IRTab(SiPlayground r, boolean c) {
+    super(r);
     this.c = c;
     irTab = r.ctx.make(r.gc.getProp("si.irUI").gr());
     irArea = (CodeAreaNode) irTab.ctx.id("ir");
@@ -28,7 +28,11 @@ public class IRTab extends SiTab {
   
   public Node show() {
     irArea.removeAll();
-    r.run();
+    p.run();
     return irTab;
+  }
+  
+  public String name() {
+    return c? "C" : "IR";
   }
 }

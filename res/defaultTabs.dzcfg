@@ -1,0 +1,16 @@
+split { e=true d=h w=0.5
+  split { e=true d=v w=0.7 // handleWidth=0.2em padCol=#424244 pad=.05em
+    tabbed { m=a s=0 source { } }
+    tabbed { m=m s=0 output { } }
+  }
+  tabbed { m=a s=0
+    variables { }
+    assembly { name="assembly 1"  cmd =    "cc -O3 -masm=intel -march=native" }
+    assembly { name="assembly 2"  cmd = "clang -O3 -masm=intel" }
+    assembly { name="assembly 3"  cmd = "clang -O3 -masm=intel -march=native" }
+    assembly { name="assembly 4"  cmd =   "gcc -O3 -masm=intel" }
+    assembly { name="assembly 5"  cmd =   "gcc -O3 -masm=intel -march=native" }
+    ir { }
+    c { }
+  }
+}

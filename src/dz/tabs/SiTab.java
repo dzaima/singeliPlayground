@@ -1,21 +1,24 @@
 package dz.tabs;
 
 import dz.SiPlayground;
-import dzaima.ui.node.types.tabs.Tab;
+import dzaima.ui.gui.PartialMenu;
+import dzaima.ui.gui.io.Click;
+import dzaima.ui.node.types.tabs.*;
 
 public abstract class SiTab extends Tab {
-  public final SiPlayground r;
-  private final String title;
-  
-  protected SiTab(SiPlayground r, String title) {
-    super(r.ctx);
-    this.title = title;
-    this.r = r;
+  public final SiPlayground p;
+  public SiTab(SiPlayground p) {
+    super(p.ctx);
+    this.p = p;
   }
   
-  public String name() {
-    return title;
+  public void onRightClick(Click cl) {
+    PartialMenu m = new PartialMenu(p.gc);
+    preMenuOptions(m);
+    WindowSplitNode.onTabRightClick(m, this);
+    addMenuBarOptions(m);
+    m.open(ctx, cl);
   }
   
-  public abstract int mode();
+  public /*open*/ void preMenuOptions(PartialMenu m) { }
 }

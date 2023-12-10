@@ -3,18 +3,17 @@ package dz.tabs;
 import dz.SiPlayground;
 import dzaima.ui.node.Node;
 import dzaima.ui.node.types.editable.code.CodeAreaNode;
-import dzaima.ui.node.types.tabs.Tab;
 import dzaima.utils.Tools;
 
 import java.nio.file.*;
 
-public class SourceTab extends Tab {
+public class SourceTab extends SiTab {
   public final SiPlayground t;
   private final Node node;
   public CodeAreaNode code;
   
   public SourceTab(SiPlayground t) {
-    super(t.ctx);
+    super(t);
     this.t = t;
     node = t.ctx.make(t.gc.getProp("si.sourceTab").gr());
     code = (CodeAreaNode) node.ctx.id("code");

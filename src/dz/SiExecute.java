@@ -21,9 +21,9 @@ public class SiExecute {
   public final String[] singeliArgs;
   public final String[] ccFlags;
   int mode;
-  private final SiTab tab;
+  private final SiExecTab tab;
   
-  SiExecute(SiPlayground r, Path src, SiTab tab) {
+  SiExecute(SiPlayground r, Path src, SiExecTab tab) {
     this.r = r;
     this.vars = r.vars.map(x->x);
     
@@ -31,7 +31,7 @@ public class SiExecute {
     srcPath = src;
     execDir = r.exec;
     bqnExe = r.bqn;
-    this.ccFlags = tab instanceof AsmTab? Tools.split(((AsmTab) tab).asmCCFlags.getAll(), ' ') : null;
+    this.ccFlags = tab instanceof AsmTab? Tools.split(((AsmTab) tab).command.getAll(), ' ') : null;
     this.mode = tab.mode();
     this.tab = tab;
     this.externalRunner = r.externalRunner;

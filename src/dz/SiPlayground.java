@@ -5,15 +5,17 @@ import dzaima.ui.eval.PNodeGroup;
 import dzaima.ui.gui.*;
 import dzaima.ui.gui.config.GConfig;
 import dzaima.ui.gui.io.*;
-import dzaima.ui.node.Node;
 import dzaima.ui.node.ctx.*;
+import dzaima.ui.node.prop.Prop;
 import dzaima.ui.node.types.editable.EditNode;
 import dzaima.ui.node.types.tabs.*;
 import dzaima.utils.*;
 import io.github.humbleui.skija.Surface;
 
 import java.nio.file.*;
+import java.util.HashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.function.Function;
 
 public class SiPlayground extends NodeWindow {
   public static final Path LOCAL_CFG = Paths.get("local.dzcfg");
@@ -31,12 +33,10 @@ public class SiPlayground extends NodeWindow {
   public SourceTab source;
   public EditNode noteNode;
   
-  public final Node varTab;
   private final VarList varsNode;
   public final Vec<Var> vars = new Vec<>();
   
-  TabbedNode tabsRight;
-  public final Vec<SiTab> tabs = new Vec<>();
+  public final Vec<SiExecTab> tabs = new Vec<>();
   
   public final ConcurrentLinkedQueue<Runnable> toRun = new ConcurrentLinkedQueue<>();
   
@@ -50,33 +50,25 @@ public class SiPlayground extends NodeWindow {
     this.scalableCount = hasScalable? scalableCount : 1;
     this.singeliArgs = singeliArgs;
     
-    output = new OutputTab(this);
-    ((TabbedNode) base.ctx.id("outputTab")).addSelectedTab(output);
-    noteNode = output.area;
-    
-    source = new SourceTab(this);
-    ((TabbedNode) base.ctx.id("sourceTab")).addSelectedTab(source);
-    source.load(file);
-    
-    
     try {
       Files.createDirectories(exec);
     } catch (Exception e) { throw new RuntimeException(e); }
     
-    varTab = ctx.make(gc.getProp("si.varsUI").gr());
-    varsNode = (VarList) varTab.ctx.id("vars");
-    varsNode.r = this;
+    String tabSet = Tools.readRes("defaultTabs.dzcfg");
     
+    HashMap<String, Function<HashMap<String, Prop>, Tab>> m = new HashMap<>();
+    m.put("source", c -> source = new SourceTab(this));
+    m.put("output", c -> output = new OutputTab(this));
+    m.put("variables", c -> tabs.add(new VarsTab(this)));
+    m.put("assembly", c -> tabs.add(new AsmTab(this, c.get("name").str(), c.get("cmd").str())));
+    m.put("ir", c -> tabs.add(new IRTab(this, false)));
+    m.put("c", c -> tabs.add(new IRTab(this, true)));
     
-    tabsRight = (TabbedNode) base.ctx.id("tabsRight");
-    tabsRight.addSelectedTab(new VarsTab(this, "variables"));
-    tabsRight.addTab(new AsmTab(this, "assembly 1",    "cc -O3 -masm=intel -march=native"));
-    tabsRight.addTab(new AsmTab(this, "assembly 2", "clang -O3 -masm=intel"));
-    tabsRight.addTab(new AsmTab(this, "assembly 3", "clang -O3 -masm=intel -march=native"));
-    tabsRight.addTab(new AsmTab(this, "assembly 4",   "gcc -O3 -masm=intel"));
-    tabsRight.addTab(new AsmTab(this, "assembly 5",   "gcc -O3 -masm=intel -march=native"));
-    tabsRight.addTab(new IRTab(this, false, "IR"));
-    tabsRight.addTab(new IRTab(this, true, "C"));
+    base.ctx.id("place").add(SerializableTab.deserializeTree(base.ctx, tabSet, m));
+    
+    noteNode = output.area;
+    source.load(file);
+    varsNode = ((VarsTab) tabs.linearFind(c -> c instanceof VarsTab)).varsNode;
     
     updVars();
   }
@@ -87,9 +79,12 @@ public class SiPlayground extends NodeWindow {
       prev.cancel();
       prev = null;
     }
-    SiExecute x = new SiExecute(this, file, (SiTab) tabsRight.cTab());
-    prev = x;
-    x.start(source.code.getAll());
+    Vec<SiExecTab> open = tabs.filter(c -> c.open);
+    if (open.sz > 0) {
+      SiExecute x = new SiExecute(this, file, open.get(0));
+      prev = x;
+      x.start(source.code.getAll());
+    }
   }
   
   public void tick() {
