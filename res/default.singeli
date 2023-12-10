@@ -16,6 +16,7 @@ if (hasarch{'AVX2'}) export{'f_8xi32', f{[8]i32}}
 # 'name ← expression' to set/update watch
 # 'name:← expression' to set only if name doesn't already exist
 # 'name:↩ expression' to update existing watch
+# display{'name', expression} to set watch with regular Singeli code
 # variables from a watch can be read as regular variables
 c:← i32~~1
 c ↩ c+1
@@ -24,3 +25,5 @@ data:*i16 = tup{0,1,2,3,4,5,6,7}
 
 a ← vec_broadcast{V, 1000}
 b ← a + load{*V~~data, 0}
+
+display{'foo', a * b}

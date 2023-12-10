@@ -48,3 +48,5 @@ def _playground_load{T} = {
   emit{void, 'fread', rPtr, 1, bytes, 'stdin'}
   r
 }
+
+def display{name, v} = @_playground_varSet(name) v

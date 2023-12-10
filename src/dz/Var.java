@@ -128,7 +128,7 @@ public class Var {
   public String type(boolean includeScale) {
     String elt = (type.repr==TyRepr.SIGNED?"i":type.repr==TyRepr.FLOAT?"f":"u")+type.elBits();
     if (scalar) return elt;
-    String sc = includeScale && type.scale!=-1? type.scale+"×" : "";
+    String sc = includeScale && type.scale>1? type.scale+"×" : "";
     return sc+"["+type.unscaledCount()+"]"+elt;
   }
   
