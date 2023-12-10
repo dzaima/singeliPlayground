@@ -85,7 +85,7 @@ public abstract class Executer {
     }
   }
   
-  private static final Pattern P_ASGN = Pattern.compile("([a-zA-Z_][a-zA-Z_0-9]*) *(:?) *([←↩])");
+  private static final Pattern P_ASGN = Pattern.compile("([a-zA-Z_][a-zA-Z_0-9]*) *(:?) *([←↩])|'[^']*'");
   
   protected String siQuote(String s) {
     return "'"+s+"'";
@@ -118,6 +118,10 @@ public abstract class Executer {
         Matcher m = P_ASGN.matcher(l);
         while (m.find()) {
           String name = m.group(1);
+          if (name==null) {
+            m.appendReplacement(siREPL, m.group());
+            continue;
+          }
           boolean onlyFirst = m.group(2).equals(":");
           boolean mod = m.group(3).equals("↩");
           if (onlyFirst && mod) throw new ExpException("Cannot use 'name :↩ expr'");
