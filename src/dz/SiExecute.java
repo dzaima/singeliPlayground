@@ -8,6 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.*;
 import java.util.regex.*;
 
 public class SiExecute {
@@ -58,7 +59,10 @@ public class SiExecute {
   }
   public void cancel() {
     thread.interrupt();
+    l.lock();
     canceled.set(true);
+    for (Process c : processes) c.destroyForcibly();
+    l.unlock();
   }
   
   
@@ -392,7 +396,7 @@ public class SiExecute {
     
       status("executing C...");
       // execute actual thing & read results
-      Process exec = Runtime.getRuntime().exec(new String[]{outFile});
+      Process exec = exec(new String[]{outFile});
       out = new String(exec.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
       int ec = exec.waitFor();
       if (ec!=0) {
@@ -405,7 +409,7 @@ public class SiExecute {
       status("compiling & running C...");
       Path extOutFile = execDir.resolve("external.out");
   
-      Process exec = Runtime.getRuntime().exec(new String[]{externalRunner, cFile.toString(), extOutFile.toString()});
+      Process exec = exec(new String[]{externalRunner, cFile.toString(), extOutFile.toString()});
       String sessionOut = new String(exec.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
       String sessionErr = new String(exec.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
       exec.waitFor();
@@ -447,7 +451,7 @@ public class SiExecute {
   }
   
   private boolean cc(String[] cmd) throws IOException, InterruptedException {
-    Process cc = Runtime.getRuntime().exec(cmd);
+    Process cc = exec(cmd);
     cc.getInputStream().close();
     byte[] err = cc.getErrorStream().readAllBytes();
     int exit = cc.waitFor();
@@ -478,10 +482,21 @@ public class SiExecute {
     }
     cmd.add(tmpIn.toString());
     
-    Process p = Runtime.getRuntime().exec(cmd.toArray(new String[0]));
+    Process p = exec(cmd.toArray(new String[0]));
     String out = new String(p.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
     String err = new String(p.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
     return new String[]{Integer.toString(p.waitFor()), out, Files.exists(tmpOut)? Tools.readFile(tmpOut) : "(no output)", err};
+  }
+  
+  public Vec<Process> processes = new Vec<>();
+  private final Lock l = new ReentrantLock();
+  public Process exec(String[] args) throws IOException {
+    l.lock();
+    if (canceled.get()) throw new Tools.QInterruptedException();
+    Process r = Runtime.getRuntime().exec(args);
+    processes.add(r);
+    l.unlock();
+    return r;
   }
   
   
