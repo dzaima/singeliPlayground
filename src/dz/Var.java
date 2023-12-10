@@ -14,38 +14,31 @@ public class Var {
   public final String name;
   public final byte[] data;
   public final Vec<TVar> types = new Vec<>();
-  
-  public VTy typeQuality;
-  public int typeCount; // 1 for scalar; e.g. 4 for [4]f64
-  public int typeWidth; // e.g. 64 for both f64 and [4]f64
+  public final SiType type;
   
   private final Vec<BtnNode> btns;
   private final Node nameNode;
   private static final String[] BTN_KS = new String[]{"bg", "borderL"};
   private static final Prop[] BTN_VS = new Prop[]{new ColProp(0), new ColProp(0)};
   
-  public Var(SiPlayground r, String name, byte[] data, int w0, VTy t0, boolean scalar) {
+  public Var(SiPlayground r, String name, byte[] data, SiType type) {
     this.r = r;
     this.name = name;
     this.data = data;
+    this.type = type;
+    this.scalar = type.scalar();
     n = r.base.ctx.make(r.gc.getProp("si.vlUI").gr());
-    this.scalar = scalar;
     nameNode = n.ctx.id("name");
     
-    typeQuality = t0;
-    typeWidth = w0;
-    int bitCount = data.length*8;
-    typeCount = scalar? 1 : bitCount/w0;
-    
-    types.add(new TVar(this, w0==1? Math.min(64, bitCount) : w0, w0==1? VTy.BIN : t0));
+    types.add(new TVar(this, type.isBitVec()? Math.min(64, type.widthBits()) : type.elBits(), type.repr));
     
     btns = new Vec<>();
     Node btnList = n.ctx.id("btns");
     for (String btnName : new String[]{"8","16","32","64","f32","f64","X"}) {
-      if (btnName.startsWith("f") && !scalar && typeWidth==1) continue;
+      if (btnName.startsWith("f") && type.isBitVec()) continue;
       if (!btnName.equals("X")) {
         int cw = Integer.parseInt(btnName.startsWith("f")? btnName.substring(1) : btnName);
-        if (cw > bitCount) continue;
+        if (cw > type.elBits()) continue;
       }
       BtnNode b = new BtnNode(btnList.ctx, BTN_KS, BTN_VS);
       btnList.add(b);
@@ -53,19 +46,19 @@ public class Var {
       btns.add(b);
       b.setFn(n -> {
         int aw = -1;
-        VTy at = VTy.HEX;
+        TyRepr at = TyRepr.HEX;
         switch (btnName) {
           case "8": aw=8; break;
           case "16": aw=16; break;
           case "32": aw=32; break;
           case "64": aw=64; break;
-          case "f32": aw=32; at=VTy.FLOAT; break;
-          case "f64": aw=64; at=VTy.FLOAT; break;
+          case "f32": aw=32; at=TyRepr.FLOAT; break;
+          case "f64": aw=64; at=TyRepr.FLOAT; break;
           case "X": r.vars.remove(this); r.updVars(); break;
         }
         if (aw!=-1) {
           for (TVar ct : types) {
-            if (ct.width==aw && ct.type.f()==at.f()) {
+            if (ct.elBits==aw && ct.qual.f()==at.f()) {
               types.remove(ct);
               updList();
               return;
@@ -90,7 +83,7 @@ public class Var {
     HashSet<String> tyNames = new HashSet<>();
     for (TVar c : types) {
       n.add(c.n);
-      tyNames.add(c.type==VTy.FLOAT? "f"+c.width : ""+c.width);
+      tyNames.add(c.qual==TyRepr.FLOAT? "f"+c.elBits : ""+c.elBits);
     }
     Prop bgOff = n.gc.getProp("coloredBtn.bgDef");
     Prop bgOn = n.gc.getProp("coloredBtn.bgGreen");
@@ -106,8 +99,8 @@ public class Var {
     for (TVar c : types) c.updData();
   }
   
-  public long[] read(int width) {
-    int by = width/8;
+  public long[] read(int elBits) { // read as elBits-sized unsigned integers 
+    int by = elBits/8;
     long[] res = new long[data.length/by];
     for (int i = 0; i < res.length; i++) {
       long c = 0;
@@ -133,16 +126,13 @@ public class Var {
     return type(false);
   }
   public String type(boolean includeScale) {
-    String elt = (typeQuality==VTy.SIGNED?"i":typeQuality==VTy.FLOAT?"f":"u")+typeWidth;
+    String elt = (type.repr==TyRepr.SIGNED?"i":type.repr==TyRepr.FLOAT?"f":"u")+type.elBits();
     if (scalar) return elt;
-    String sc = includeScale && r.scalableCount!=1? r.scalableCount+"×" : "";
-    return sc+"["+(elementCount()/r.scalableCount)+"]"+elt;
+    String sc = includeScale && type.scale!=-1? type.scale+"×" : "";
+    return sc+"["+type.unscaledCount()+"]"+elt;
   }
   
-  public int bitCount() {
-    return data.length*8;
-  }
-  public int elementCount() {
-    return data.length*8/typeWidth;
+  public Var copy() {
+    return new Var(r, name, data, type);
   }
 }

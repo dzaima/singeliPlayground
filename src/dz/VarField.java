@@ -32,17 +32,17 @@ public class VarField extends CodeFieldNode {
       String s = tvar.fs.get(j).getAll().replace("_","");
       long c;
       try {
-        VTy parseType = tvar.type;
-        if (s.startsWith("0x")) { s=s.substring(2); parseType=VTy.HEX; }
-        if (s.startsWith("0b")) { s=s.substring(2); parseType=VTy.BIN; }
-        if (s.startsWith("m")) { s=s.substring(1); parseType=VTy.BIN; s = new StringBuilder(s).reverse().toString(); }
+        TyRepr parseType = tvar.qual;
+        if (s.startsWith("0x")) { s=s.substring(2); parseType=TyRepr.HEX; }
+        if (s.startsWith("0b")) { s=s.substring(2); parseType=TyRepr.BIN; }
+        if (s.startsWith("m"))  { s=s.substring(1); parseType=TyRepr.BIN; s = new StringBuilder(s).reverse().toString(); }
         switch (parseType) {
           case BIN: c = Long.parseUnsignedLong(s, 2); break;
           case HEX: c = Long.parseUnsignedLong(s, 16); break;
           case UNSIGNED: c = Long.parseUnsignedLong(s); break;
           case SIGNED: c = Long.parseLong(s); break;
           case FLOAT:
-            c = tvar.width==32? Float.floatToIntBits(Float.parseFloat(s))&0xffffffffL
+            c = tvar.elBits==32? Float.floatToIntBits(Float.parseFloat(s))&0xffffffffL
               : Double.doubleToRawLongBits(Double.parseDouble(s));
             break;
           default: c = -1;

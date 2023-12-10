@@ -19,13 +19,12 @@ import java.util.function.Function;
 
 public class SiPlayground extends NodeWindow {
   public static final Path LOCAL_CFG = Paths.get("local.dzcfg");
-  public Path file = Paths.get("current.singeli");
+  public Path savePath = Paths.get("current.singeli");
   
   public String bqn;
   public Path singeliPath;
   public final String[] singeliArgs;
   public final String externalRunner;
-  public final int scalableCount;
   public final boolean hasScalable;
   public Path exec = Paths.get("exec/");
   
@@ -47,7 +46,6 @@ public class SiPlayground extends NodeWindow {
     this.singeliPath = Files.isDirectory(singeliPath)? singeliPath.resolve("singeli") : singeliPath;
     this.externalRunner = externalRunner;
     this.hasScalable = scalableCount!=-1;
-    this.scalableCount = hasScalable? scalableCount : 1;
     this.singeliArgs = singeliArgs;
     
     try {
@@ -61,29 +59,34 @@ public class SiPlayground extends NodeWindow {
     m.put("output", c -> output = new OutputTab(this));
     m.put("variables", c -> tabs.add(new VarsTab(this)));
     m.put("assembly", c -> tabs.add(new AsmTab(this, c.get("name").str(), c.get("cmd").str())));
-    m.put("ir", c -> tabs.add(new IRTab(this, false)));
-    m.put("c", c -> tabs.add(new IRTab(this, true)));
+    m.put("ir", c -> tabs.add(new TextOutTab(this, false)));
+    m.put("c", c -> tabs.add(new TextOutTab(this, true)));
     
     base.ctx.id("place").add(SerializableTab.deserializeTree(base.ctx, tabSet, m));
     
     noteNode = output.area;
-    source.load(file);
+    source.load(savePath);
     varsNode = ((VarsTab) tabs.linearFind(c -> c instanceof VarsTab)).varsNode;
     
     updVars();
   }
   
-  SiExecute prev;
+  Executer prev;
   public void run() {
     if (prev!=null) {
       prev.cancel();
       prev = null;
     }
+    String src = source.code.getAll();
+    Tools.writeFile(savePath, src);
+    
     Vec<SiExecTab> open = tabs.filter(c -> c.open);
     if (open.sz > 0) {
-      SiExecute x = new SiExecute(this, file, open.get(0));
-      prev = x;
-      x.start(source.code.getAll());
+      Executer e = open.get(0).prep(src, () -> {
+        prev = null;
+      });
+      prev = e;
+      e.start();
     }
   }
   

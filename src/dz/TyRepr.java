@@ -1,11 +1,11 @@
 package dz;
 
-public enum VTy {
+public enum TyRepr {
   SIGNED("i"), UNSIGNED("u"), HEX("x"), BIN("b"), FLOAT("f");
   
-  public final String btnName;
-  VTy(String btnName) {
-    this.btnName = btnName;
+  public final String repr;
+  TyRepr(String repr) {
+    this.repr = repr;
   }
   
   public boolean f() {
