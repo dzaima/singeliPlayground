@@ -1,6 +1,9 @@
-package dz;
+package dz.tabs;
 
-public abstract class SiTab extends dzaima.ui.node.types.tabs.Tab {
+import dz.SiPlayground;
+import dzaima.ui.node.types.tabs.Tab;
+
+public abstract class SiTab extends Tab {
   public final SiPlayground r;
   private final String title;
   

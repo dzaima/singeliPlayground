@@ -1,5 +1,6 @@
 package dz;
 
+import dz.tabs.SiTab;
 import dzaima.ui.node.Node;
 
 public class VarsTab extends SiTab {

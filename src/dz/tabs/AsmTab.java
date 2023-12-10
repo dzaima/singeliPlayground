@@ -1,5 +1,6 @@
-package dz;
+package dz.tabs;
 
+import dz.*;
 import dzaima.ui.node.Node;
 import dzaima.ui.node.types.editable.EditNode;
 import dzaima.ui.node.types.editable.code.CodeAreaNode;

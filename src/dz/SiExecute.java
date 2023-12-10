@@ -1,5 +1,6 @@
 package dz;
 
+import dz.tabs.*;
 import dzaima.utils.*;
 
 import java.io.IOException;

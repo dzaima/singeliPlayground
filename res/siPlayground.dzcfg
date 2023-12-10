@@ -6,20 +6,19 @@ si {
     fontMinus = { "ctrl+minus" }
   }
   ui = h { bg=bg.back
-    weighed { dir=h
-      pad {
-        weighed { dir=v weight=0.7 handleWidth=0.2em padCol=#424244 pad=.05em
-          scroll { bg=bg.bg1 codearea { id=code family="DejaVu Sans Mono" padLns=20 } }
-          scroll { codearea { id=note family="DejaVu Sans Mono" numbering=false } }
-        }
+    windowSplit { dir=h
+      windowSplit { dir=v weight=0.7 handleWidth=0.2em padCol=#424244 pad=.05em
+        tabbed { id=sourceTab }
+        tabbed { id=outputTab }
       }
-      v {
-        tabbed { dir=h mode=drag pad=.2em
-          id=tabsRight
-        }
+      tabbed {
+        id=tabsRight
       }
     }
   }
+  
+  sourceTab = scroll { bg=bg.bg1 codearea { id=code family="DejaVu Sans Mono" padLns=20 } }
+  outputTab = scroll { codearea { id=area family="DejaVu Sans Mono" numbering=false } }
   
   varsUI = pad { u=0.5em l=0.5em
     scroll { x=off
