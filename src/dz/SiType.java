@@ -55,4 +55,10 @@ public class SiType {
     String e = repr.repr + primWidth;
     return scalar()? e : "["+unscaledCount()+"]"+e;
   }
+  
+  public boolean equals(Object o) {
+    if (!(o instanceof SiType)) return false;
+    SiType t = (SiType) o;
+    return primWidth==t.primWidth && scale==t.scale && count==t.count && repr==t.repr;
+  }
 }

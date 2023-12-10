@@ -38,15 +38,25 @@ public class VarsTab extends SiExecTab {
         note(o.out);
         note(o.err);
         
+        Executed t;
+        
         Path tc = tmpFile(".c");
         Tools.writeFile(tc, pre.c+"\n"+o.custom);
-        Path exe = tmpFile(".out");
-        compileC("cc", "-march=native", "-O1", "-o", exe.toString(), tc.toString());
         
-        status("Running binary...");
         ByteVec in = new ByteVec();
         for (Var v : vars) in.addAll(v.data);
-        Executed t = execCollect(new String[]{exe.toString()}, in.get());
+        
+        if (runner==null) {
+          Path exe = tmpFile(".out");
+          compileC("cc", "-march=native", "-O1", "-o", exe.toString(), tc.toString());
+          
+          status("Running binary...");
+          t = execCollect(new String[]{exe.toString()}, in.get());
+        } else {
+          status("Running...");
+          Path log = tmpFile(".log");
+          t = execCollect(new String[]{runner, tc.toString(), log.toString(), tmpFile(".out").toString()}, in.get());
+        }
         
         status("Processing output...");
         String begin = "<VAR_SET_BEGIN>";
@@ -81,6 +91,7 @@ public class VarsTab extends SiExecTab {
         
         note(t.out);
         note(new String(realErr.get(), StandardCharsets.UTF_8));
+        if (t.code!=0) note("Exit code: "+t.code);
         
         p.toRun.add(() -> {
           HashMap<String, Integer> m = new HashMap<>();
@@ -88,7 +99,8 @@ public class VarsTab extends SiExecTab {
           for (int j = 0; j < vars.sz; j++) m.put(vars.get(j).name, j);
           for (Var c : sets) {
             if (m.containsKey(c.name)) {
-              vars.set(m.get(c.name), c);
+              int j = m.get(c.name);
+              vars.set(j, vars.get(j).updatedBy(c));
             } else {
               m.put(c.name, vars.size());
               vars.add(c);

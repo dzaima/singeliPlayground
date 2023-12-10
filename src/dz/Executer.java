@@ -11,12 +11,13 @@ import java.util.concurrent.locks.*;
 import java.util.regex.*;
 
 public abstract class Executer {
-  protected SiPlayground r;
-  protected String bqnExe, siExe;
-  protected String[] siArgs;
+  protected final SiPlayground r;
+  protected final String bqnExe, siExe;
+  protected final String[] siArgs;
+  protected final String runner;
   
-  protected AtomicBoolean canceled = new AtomicBoolean(false);
-  protected String code;
+  protected final AtomicBoolean canceled = new AtomicBoolean(false);
+  protected final String code;
   
   private final Path tmpDir;
   private final Runnable onDone;
@@ -32,6 +33,7 @@ public abstract class Executer {
     this.siArgs = r.singeliArgs;
     this.code = code;
     this.onDone = onDone;
+    this.runner = r.externalRunner;
   }
   
   public void start() {

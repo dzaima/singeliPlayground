@@ -5,17 +5,17 @@ import dzaima.ui.node.prop.*;
 import dzaima.ui.node.types.*;
 import dzaima.utils.Vec;
 
-import java.util.HashSet;
+import java.util.*;
 
 public class Var {
   public final SiPlayground r;
-  public Node n;
   public final boolean scalar;
   public final String name;
-  public final byte[] data;
-  public final Vec<TVar> types = new Vec<>();
   public final SiType type;
+  public final byte[] data;
   
+  public final Node n;
+  public final Vec<TVar> types = new Vec<>();
   private final Vec<BtnNode> btns;
   private final Node nameNode;
   private static final String[] BTN_KS = new String[]{"bg", "borderL"};
@@ -27,10 +27,12 @@ public class Var {
     this.data = data;
     this.type = type;
     this.scalar = type.scalar();
+    
+    
     n = r.base.ctx.make(r.gc.getProp("si.vlUI").gr());
     nameNode = n.ctx.id("name");
     
-    types.add(new TVar(this, type.isBitVec()? Math.min(64, type.widthBits()) : type.elBits(), type.repr));
+    types.add(new TVar(this, type.isBitVec()? Math.min(64, type.widthBits()) : type.elBits(), type.isBitVec()? TyRepr.BIN : type.repr));
     
     btns = new Vec<>();
     Node btnList = n.ctx.id("btns");
@@ -38,7 +40,7 @@ public class Var {
       if (btnName.startsWith("f") && type.isBitVec()) continue;
       if (!btnName.equals("X")) {
         int cw = Integer.parseInt(btnName.startsWith("f")? btnName.substring(1) : btnName);
-        if (cw > type.elBits()) continue;
+        if (cw > type.widthBits()) continue;
       }
       BtnNode b = new BtnNode(btnList.ctx, BTN_KS, BTN_VS);
       btnList.add(b);
@@ -75,7 +77,7 @@ public class Var {
   
   public void updTitle() {
     nameNode.clearCh();
-    nameNode.add(new StringNode(n.ctx, name+" : "+type(true)));
+    nameNode.add(new StringNode(n.ctx, name+" : "+type()));
   }
   public void updList() {
     updTitle();
@@ -123,16 +125,22 @@ public class Var {
   }
   
   public String type() {
-    return type(false);
-  }
-  public String type(boolean includeScale) {
     String elt = (type.repr==TyRepr.SIGNED?"i":type.repr==TyRepr.FLOAT?"f":"u")+type.elBits();
     if (scalar) return elt;
-    String sc = includeScale && type.scale>1? type.scale+"×" : "";
+    String sc = type.scale>1? type.scale+"×" : "";
     return sc+"["+type.unscaledCount()+"]"+elt;
   }
   
   public Var copy() {
-    return new Var(r, name, data, type);
+    return new Var(r, name, Arrays.copyOf(data, data.length), type);
+  }
+  
+  public Var updatedBy(Var v) {
+    if (v.type.equals(type)) {
+      System.arraycopy(v.data, 0, data, 0, v.data.length);
+      updData();
+      return this;
+    }
+    return v;
   }
 }
