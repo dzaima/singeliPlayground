@@ -1,5 +1,6 @@
-package dz;
+package dz.tabs;
 
+import dz.SiPlayground;
 import dz.tabs.SiTab;
 import dzaima.ui.node.Node;
 
