@@ -30,7 +30,7 @@ public abstract class Executer {
   protected Executer(SiExecTab tab, SiPlayground r, String code, Runnable onDone) {
     this.tab = tab;
     this.r = r;
-    this.tmpDir = r.exec;
+    this.tmpDir = r.execTmp;
     this.bqnExe = r.bqn;
     this.siExe = r.singeliPath.toAbsolutePath().toString();
     this.siArgs = r.singeliArgs;

@@ -13,10 +13,12 @@ import dzaima.ui.node.types.tabs.*;
 import dzaima.utils.*;
 import io.github.humbleui.skija.Surface;
 
+import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 public class SiPlayground extends NodeWindow {
   public static final Path LOCAL_CFG = Paths.get("local.dzcfg");
@@ -27,7 +29,7 @@ public class SiPlayground extends NodeWindow {
   public String bqn;
   public Path singeliPath;
   public final String[] singeliArgs;
-  public Path exec = Paths.get("exec/");
+  public Path execTmp = Paths.get("exec/");
   
   public OutputTab output;
   public SourceTab source;
@@ -50,7 +52,7 @@ public class SiPlayground extends NodeWindow {
     this.singeliArgs = singeliArgs;
     
     try {
-      Files.createDirectories(exec);
+      Files.createDirectories(execTmp);
     } catch (Exception e) { throw new RuntimeException(e); }
     
     String layoutSrc;
@@ -94,10 +96,23 @@ public class SiPlayground extends NodeWindow {
     if (!initialized) return;
     Executer ex = t.prep(source.code.getAll(), () -> {
       queue.remove(t);
-      if (!queue.isEmpty()) queue.values().iterator().next().start();
+      if (!queue.isEmpty()) {
+        queue.values().iterator().next().start();
+      } else {
+        try (Stream<Path> stream = Files.list(execTmp)) {
+          stream.forEach(c -> {
+            if (c.getFileName().toString().startsWith("tmp_")) {
+              try { Files.deleteIfExists(c); }
+              catch (IOException e) { Log.stacktrace("cleanup", e); }
+            }
+          });
+        } catch (IOException e) {
+          Log.stacktrace("cleanup", e);
+        }
+      }
     });
     
-    if (!queue.isEmpty() && queue.keySet().iterator().next() == t) (queue.isEmpty()? null : queue.values().iterator().next()).cancel();
+    if (!queue.isEmpty() && queue.keySet().iterator().next() == t) queue.values().iterator().next().cancel();
     queue.put(t, ex);
     if (queue.values().iterator().next() == ex) ex.start();
   }
