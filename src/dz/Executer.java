@@ -105,6 +105,7 @@ public abstract class Executer {
     StringBuilder c = new StringBuilder();
     c.append("#include<stdio.h>\n");
     StringBuilder siMain = new StringBuilder();
+    siMain.append("include ").append(siQuote(Tools.RES_DIR.resolve("replPrep").toAbsolutePath().toString())).append(';');
     StringBuilder siREPL = new StringBuilder();
     boolean inREPL = false;
     for (String l : Tools.split(siCode, '\n')) {
@@ -113,7 +114,7 @@ public abstract class Executer {
       } else if (l.equals("⍎")) {
         if (inREPL) throw new ExpException("Multiple ⍎s found");
         inREPL = true;
-        siREPL.append("include ").append(siQuote(Tools.RES_DIR.resolve("replPrep").toAbsolutePath().toString())).append("; main:i32 = {");
+        siREPL.append("main:i32 = {");
         for (Pair<String, SiType> p : prevVars) {
           siREPL.append(p.a).append(":=_playground_load{").append(p.b.toSingeli()).append("};");
         }
@@ -147,7 +148,8 @@ public abstract class Executer {
       }
       (inREPL? siREPL : siMain).append('\n');
     }
-    siREPL.append("0}");
+    
+    if (inREPL) siREPL.append("0}");
     
     return new Preprocessed(c.toString(), siMain.toString(), siREPL.toString(), newVars);
   }

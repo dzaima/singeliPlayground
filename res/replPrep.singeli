@@ -1,12 +1,13 @@
 include 'debug/printf'
 if (hasarch{'RVV'}) require{'riscv_vector.h'}
 
-def _playground_scale{} = if (hasarch{'RVV'}) emit{u32, '__riscv_vlenb'}/16 else 1
+def _playground_scale{} = if (hasarch{'RVV'}) __div{emit{u32, '__riscv_vlenb'},16} else 1
 def _playground_err{...a} = { show{merge{...a}}; ({}=>0){0} }
+def _playground_bytes{T, scale} = __shr{__add{__mul{width{T},scale}, 7}, 3}
 
 def _playground_display{name, r} = {
   def printf{s, ...v} = emit{void, 'fprintf', 'stderr', merge{'"',s,'"'}, ...v}
-  if (kind{r}!='constant' and kind{r}!='register') _playground_err{'Cannot display value with kind ', kind{r}}
+  if (not is{kind{r},'constant'} and not is{kind{r},'register'}) _playground_err{'Cannot display value with kind ', kind{r}}
   def T = type{r}
   
   printf{'<VAR_SET_BEGIN>'}
@@ -23,10 +24,10 @@ def _playground_display{name, r} = {
   printf{'%s;', merge{'"',name,'"'}}
   
   rReg:=r
-  def bytes = (width{T}*scale + 7) >> 3
+  def bytes = _playground_bytes{T, scale}
   printf{'%d;', bytes}
   
-  def rPtr = emit{*void, '&', rReg}
+  def rPtr = emit{__pnt{void}, '&', rReg}
   emit{void, 'fwrite', rPtr, 1, bytes, 'stderr'}
   
   
@@ -45,11 +46,9 @@ def _playground_varUpd{vars,_,{reg,name},iter} = {
 }
 
 def _playground_load{T} = {
-  def scale = _playground_scale{}
-  def bytes = (width{T}*scale + 7) >> 3
   r:=undefined{T}
-  def rPtr = emit{*void, '&', r}
-  emit{void, 'fread', rPtr, 1, bytes, 'stdin'}
+  def rPtr = emit{__pnt{void}, '&', r}
+  emit{void, 'fread', rPtr, 1, _playground_bytes{T, _playground_scale{}}, 'stdin'}
   r
 }
 

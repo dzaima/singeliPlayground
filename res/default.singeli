@@ -27,3 +27,6 @@ a ← vec_broadcast{V, 1000}
 b ← a + load{*V~~data, 0}
 
 display{'foo', a * b}
+
+# before '⍎' is top-level Singeli code, afterwards is the contents of the main() function
+# alternatively, a custom main() can be defined, but then ←/↩ won't work (display{} still does)
