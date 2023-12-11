@@ -14,7 +14,7 @@ import dzaima.utils.*;
 import io.github.humbleui.skija.Surface;
 
 import java.nio.file.*;
-import java.util.HashMap;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Function;
 
@@ -37,7 +37,7 @@ public class SiPlayground extends NodeWindow {
   public final Node layoutPlace;
   public final Vec<Var> vars = new Vec<>();
   
-  public final Vec<SiExecTab> tabs = new Vec<>();
+  public final HashSet<SiExecTab> tabs = new HashSet<>();
   public final ConcurrentLinkedQueue<Runnable> toRun = new ConcurrentLinkedQueue<>();
   
   public SiPlayground(GConfig gc, Ctx pctx, PNodeGroup g, String bqn, Path singeliPath, String[] singeliArgs, Path savePath, Path layoutPath, Path runnerPath) {
@@ -62,19 +62,22 @@ public class SiPlayground extends NodeWindow {
     }
     
     HashMap<String, Function<HashMap<String, Prop>, Tab>> m = new HashMap<>();
-    m.put("source", c -> source = new SourceTab(this));
-    m.put("output", c -> output = new OutputTab(this));
-    m.put("variables", c -> tabs.add(new VarsTab(this)));
-    m.put("assembly", c -> tabs.add(new AsmTab(this, c.get("name").str(), c.get("cmd").str())));
-    m.put("ir", c -> tabs.add(new TextOutTab(this, false)));
-    m.put("c", c -> tabs.add(new TextOutTab(this, true)));
+    VarsTab varsTab = new VarsTab(this);
+    source = new SourceTab(this);
+    output = new OutputTab(this);
+    m.put("source", c -> source);
+    m.put("output", c -> output);
+    m.put("variables", c -> varsTab);
+    m.put("assembly", c -> new AsmTab(this, c.get("name").str(), c.get("cmd").str()));
+    m.put("ir", c -> new TextOutTab(this, false));
+    m.put("c", c -> new TextOutTab(this, true));
     
     layoutPlace = base.ctx.id("place");
     layoutPlace.add(SerializableTab.deserializeTree(base.ctx, layoutSrc, m));
     
     noteNode = output.area;
     source.load(savePath);
-    varsNode = ((VarsTab) tabs.linearFind(c -> c instanceof VarsTab)).varsNode;
+    varsNode = varsTab.varsNode;
     
     updVars();
     initialized = true;
@@ -91,9 +94,8 @@ public class SiPlayground extends NodeWindow {
     Tools.writeFile(savePath, src);
     Tools.writeFile(layoutPath, SerializableTab.serializeTree(layoutPlace.ch.get(0)));
     
-    Vec<SiExecTab> open = tabs.filter(c -> c.open);
-    if (open.sz > 0) {
-      Executer e = open.get(0).prep(src, () -> {
+    if (!tabs.isEmpty()) {
+      Executer e = tabs.iterator().next().prep(src, () -> {
         prev = null;
       });
       prev = e;

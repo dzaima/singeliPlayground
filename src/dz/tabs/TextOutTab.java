@@ -12,15 +12,16 @@ public class TextOutTab extends SiExecTab {
   private final boolean c;
   public final CodeAreaNode irArea;
   
-  public TextOutTab(SiPlayground r, boolean c) {
-    super(r);
+  public TextOutTab(SiPlayground p, boolean c) {
+    super(p);
     this.c = c;
-    node = r.ctx.make(r.gc.getProp("si.irUI").gr());
+    node = p.ctx.make(p.gc.getProp("si.irUI").gr());
     irArea = (CodeAreaNode) node.ctx.id("ir");
-    irArea.setLang(r.gc.langs().fromName(c? "C" : "singeli"));
+    irArea.setLang(p.gc.langs().fromName(c? "C" : "singeli"));
   }
   
   public Node show() {
+    onShow();
     irArea.removeAll();
     p.run();
     return node;

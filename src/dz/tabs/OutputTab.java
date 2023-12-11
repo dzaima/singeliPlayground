@@ -8,9 +8,9 @@ public class OutputTab extends SiTab {
   private final Node node;
   public EditNode area;
   
-  public OutputTab(SiPlayground t) {
-    super(t);
-    node = t.ctx.make(t.gc.getProp("si.outputTab").gr());
+  public OutputTab(SiPlayground p) {
+    super(p);
+    node = p.ctx.make(p.gc.getProp("si.outputTab").gr());
     area = (EditNode) node.ctx.id("area");
   }
   

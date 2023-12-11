@@ -17,8 +17,10 @@ public abstract class SiTab extends Tab implements SerializableTab {
     preMenuOptions(m);
     WindowSplitNode.onTabRightClick(m, this);
     addMenuBarOptions(m);
+    if (closable()) m.add("close", () -> w.o.removeTab(w.o.tabIndex(this)));
     m.open(ctx, cl);
   }
   
+  public /*open*/ boolean closable() { return false; }
   public /*open*/ void preMenuOptions(PartialMenu m) { }
 }

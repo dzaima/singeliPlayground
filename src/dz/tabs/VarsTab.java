@@ -12,14 +12,15 @@ public class VarsTab extends SiExecTab {
   private final Node node;
   public final VarList varsNode;
   
-  public VarsTab(SiPlayground r) {
-    super(r);
-    node = ctx.make(r.gc.getProp("si.varsUI").gr());
+  public VarsTab(SiPlayground p) {
+    super(p);
+    node = ctx.make(p.gc.getProp("si.varsUI").gr());
     varsNode = (VarList) node.ctx.id("vars");
-    varsNode.r = r;
+    varsNode.r = p;
   }
   
   public Node show() {
+    onShow();
     return node;
   }
   

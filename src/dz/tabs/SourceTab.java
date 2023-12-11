@@ -12,17 +12,17 @@ public class SourceTab extends SiTab {
   private final Node node;
   public CodeAreaNode code;
   
-  public SourceTab(SiPlayground t) {
-    super(t);
-    this.t = t;
-    node = t.ctx.make(t.gc.getProp("si.sourceTab").gr());
+  public SourceTab(SiPlayground p) {
+    super(p);
+    this.t = p;
+    node = p.ctx.make(p.gc.getProp("si.sourceTab").gr());
     code = (CodeAreaNode) node.ctx.id("code");
     
     code.propsUpd();
-    code.setLang(t.gc.langs().fromName("singeli"));
+    code.setLang(p.gc.langs().fromName("singeli"));
     
     code.setFn(value -> {
-      if (value!=0) t.run();
+      if (value!=0) p.run();
       return value!=0;
     });
   }
