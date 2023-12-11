@@ -8,10 +8,10 @@ public abstract class SiExecTab extends SiTab {
   }
   
   protected void onShow() {
-    p.tabs.add(this);
+    p.openTabs.add(this);
   }
   public void hide() {
-    p.tabs.remove(this);
+    p.openTabs.remove(this);
   }
   
   public abstract Executer prep(String src, Runnable onDone);

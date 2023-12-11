@@ -29,7 +29,7 @@ public class AsmTab extends SiExecTab {
   public Node show() {
     onShow();
     asmArea.removeAll();
-    p.run();
+    p.run(this);
     return node;
   }
   
@@ -67,7 +67,7 @@ public class AsmTab extends SiExecTab {
   
   public Executer prep(String src, Runnable onDone) {
     String[] cmd = Tools.split(command.getAll(), ' ');
-    return new Executer(p, src, onDone) {
+    return new Executer(this, p, src, onDone) {
       protected void onThread() throws Exception {
         Path c = tmpFile(".c");
         Path asm = tmpFile(".asm");

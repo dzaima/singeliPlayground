@@ -23,7 +23,7 @@ public class TextOutTab extends SiExecTab {
   public Node show() {
     onShow();
     irArea.removeAll();
-    p.run();
+    p.run(this);
     return node;
   }
   
@@ -36,7 +36,7 @@ public class TextOutTab extends SiExecTab {
   }
   
   public Executer prep(String src, Runnable onDone) {
-    return new Executer(p, src, onDone) {
+    return new Executer(this, p, src, onDone) {
       protected void onThread() throws Exception {
         String s = compileSingeliMain(src, !c);
         p.toRun.add(() -> setContents(irArea, s));

@@ -22,7 +22,7 @@ public class SourceTab extends SiTab {
     code.setLang(p.gc.langs().fromName("singeli"));
     
     code.setFn(value -> {
-      if (value!=0) p.run();
+      if (value!=0) p.runAll();
       return value!=0;
     });
   }

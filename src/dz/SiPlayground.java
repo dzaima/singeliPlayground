@@ -37,7 +37,6 @@ public class SiPlayground extends NodeWindow {
   public final Node layoutPlace;
   public final Vec<Var> vars = new Vec<>();
   
-  public final HashSet<SiExecTab> tabs = new HashSet<>();
   public final ConcurrentLinkedQueue<Runnable> toRun = new ConcurrentLinkedQueue<>();
   
   public SiPlayground(GConfig gc, Ctx pctx, PNodeGroup g, String bqn, Path singeliPath, String[] singeliArgs, Path savePath, Path layoutPath, Path runnerPath) {
@@ -64,6 +63,7 @@ public class SiPlayground extends NodeWindow {
     HashMap<String, Function<HashMap<String, Prop>, Tab>> m = new HashMap<>();
     VarsTab varsTab = new VarsTab(this);
     source = new SourceTab(this);
+    source.load(savePath);
     output = new OutputTab(this);
     m.put("source", c -> source);
     m.put("output", c -> output);
@@ -76,31 +76,35 @@ public class SiPlayground extends NodeWindow {
     layoutPlace.add(SerializableTab.deserializeTree(base.ctx, layoutSrc, m));
     
     noteNode = output.area;
-    source.load(savePath);
     varsNode = varsTab.varsNode;
     
     updVars();
     initialized = true;
   }
   
-  Executer prev;
-  public void run() {
+  public final LinkedHashSet<SiExecTab> openTabs = new LinkedHashSet<>();
+  
+  private final LinkedHashMap<SiExecTab, Executer> queue = new LinkedHashMap<>(); // first entry is the active one
+  public void save() {
     if (!initialized) return;
-    if (prev!=null) {
-      prev.cancel();
-      prev = null;
-    }
-    String src = source.code.getAll();
-    Tools.writeFile(savePath, src);
+    Tools.writeFile(savePath, source.code.getAll());
     Tools.writeFile(layoutPath, SerializableTab.serializeTree(layoutPlace.ch.get(0)));
+  }
+  public void run(SiExecTab t) {
+    if (!initialized) return;
+    Executer ex = t.prep(source.code.getAll(), () -> {
+      queue.remove(t);
+      if (!queue.isEmpty()) queue.values().iterator().next().start();
+    });
     
-    if (!tabs.isEmpty()) {
-      Executer e = tabs.iterator().next().prep(src, () -> {
-        prev = null;
-      });
-      prev = e;
-      e.start();
-    }
+    if (!queue.isEmpty() && queue.keySet().iterator().next() == t) (queue.isEmpty()? null : queue.values().iterator().next()).cancel();
+    queue.put(t, ex);
+    if (queue.values().iterator().next() == ex) ex.start();
+  }
+  public void runAll() {
+    if (!initialized) return;
+    save();
+    for (SiExecTab c : openTabs) run(c);
   }
   
   public void tick() {
@@ -180,7 +184,7 @@ public class SiPlayground extends NodeWindow {
   public boolean key(Key key, int scancode, KeyAction a) {
     switch (gc.keymap(key, a, "si")) {
       case "devtools": createTools(); return true;
-      case "run": run(); return true;
+      case "run": runAll(); return true;
       case "fontPlus":  gc.setEM(gc.em+1); return true;
       case "fontMinus": gc.setEM(gc.em-1); return true;
     }

@@ -1,5 +1,6 @@
 package dz;
 
+import dz.tabs.SiExecTab;
 import dzaima.utils.*;
 
 import java.io.*;
@@ -11,6 +12,7 @@ import java.util.concurrent.locks.*;
 import java.util.regex.*;
 
 public abstract class Executer {
+  public final SiExecTab tab;
   protected final SiPlayground r;
   protected final String bqnExe, siExe;
   protected final String[] siArgs;
@@ -25,7 +27,8 @@ public abstract class Executer {
   private final Lock l = new ReentrantLock();
   private Thread thread;
   
-  protected Executer(SiPlayground r, String code, Runnable onDone) {
+  protected Executer(SiExecTab tab, SiPlayground r, String code, Runnable onDone) {
+    this.tab = tab;
     this.r = r;
     this.tmpDir = r.exec;
     this.bqnExe = r.bqn;
