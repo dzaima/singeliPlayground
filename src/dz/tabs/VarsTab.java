@@ -48,7 +48,7 @@ public class VarsTab extends SiExecTab {
         Tools.writeFile(tc, pre.c+"\n"+o.custom);
         
         ByteVec in = new ByteVec();
-        for (Var v : vars) in.addAll(v.data);
+        if (pre.loads) for (Var v : vars) in.addAll(v.data);
         
         if (runner==null) {
           Path exe = tmpFile(".out");

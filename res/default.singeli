@@ -14,7 +14,7 @@ export{'f_4xi32', f{[4]i32}}
 if (hasarch{'AVX2'}) export{'f_8xi32', f{[8]i32}}
 
 main() : i32 = {
-  _playground_load # replaced with code to load existing watches
+  _playground_begin # replaced with code to load existing watches
   # if not present, ←/↩ won't work (display{} still will)
   
   # 'name ← expression' to set/update watch

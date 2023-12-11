@@ -84,9 +84,11 @@ public abstract class Executer {
   protected static class Preprocessed {
     public final String c, siMain, siREPL;
     public final Vec<String> vars;
-    protected Preprocessed(String c, String siMain, String siREPL, Vec<String> vars) {
+    public final boolean loads;
+    protected Preprocessed(String c, String siMain, String siREPL, Vec<String> vars, boolean loads) {
       this.c=c; this.siMain=siMain; this.siREPL=siREPL;
       this.vars = vars;
+      this.loads = loads;
     }
   }
   
@@ -113,18 +115,26 @@ public abstract class Executer {
     if (loadB.length()>0) loadB.deleteCharAt(loadB.length()-1);
     String loads = loadB.toString();
     
+    String loadText = "_playground_begin";
+    boolean varsLoaded = false;
     
     boolean inREPL = false;
+    StringBuilder curr = siMain;
     for (String l : Tools.split(siCode, '\n')) {
-      StringBuilder curr = inREPL? siREPL : siMain;
       if (l.startsWith("cinit ")) {
         c.append(l.substring(6)).append('\n');
       } else if (l.equals("⍎")) {
         if (inREPL) throw new ExpException("Multiple ⍎s found");
         inREPL = true;
+        curr = siREPL;
         siREPL.append("main:i32 = {").append(loads);
+        varsLoaded = true;
       } else {
-        l = l.replaceAll("_playground_load", loads);
+        if (!varsLoaded && l.contains(loadText)) {
+          l = l.replaceFirst(loadText, loads);
+          varsLoaded = true;
+        }
+        if (varsLoaded && l.contains(loadText)) throw new ExpException("_playground_begin used twice");
         Matcher m = P_ASGN.matcher(l);
         while (m.find()) {
           String name = m.group(1);
@@ -135,7 +145,7 @@ public abstract class Executer {
           boolean onlyFirst = m.group(2).equals(":");
           boolean mod = m.group(3).equals("↩");
           if (onlyFirst && mod) throw new ExpException("Cannot use 'name :↩ expr'");
-          boolean isNew = !prevMap.contains(name);
+          boolean isNew = !varsLoaded || !prevMap.contains(name);
           
           newMap.computeIfAbsent(name, n1 -> {
             newVars.add(name);
@@ -155,7 +165,7 @@ public abstract class Executer {
     
     if (inREPL) siREPL.append("0}");
     
-    return new Preprocessed(c.toString(), siMain.toString(), siREPL.toString(), newVars);
+    return new Preprocessed(c.toString(), siMain.toString(), siREPL.toString(), newVars, varsLoaded);
   }
   
   
