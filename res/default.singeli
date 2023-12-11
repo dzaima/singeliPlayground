@@ -15,11 +15,10 @@ if (hasarch{'AVX2'}) export{'f_8xi32', f{[8]i32}}
 
 main() : i32 = {
   _playground_begin # replaced with code to load existing watches
-  # if not present, ←/↩ won't work (display{} still will)
   
   # 'name ← expression' to set/update watch
-  # 'name:← expression' to set only if name doesn't already exist
-  # 'name:↩ expression' to update existing watch
+  # 'name:← expression' to set only if watch doesn't already exist
+  # 'name ↩ expression' to update existing watch
   # display{'name', expression} to set watch with regular Singeli code
   # variables from a watch can be read as regular variables
   c:← i32~~1
