@@ -20,10 +20,6 @@ public class TextOutTab extends SiExecTab {
     irArea.setLang(r.gc.langs().fromName(c? "C" : "singeli"));
   }
   
-  public void setContents(String s) {
-    setContents(irArea, s);
-  }
-  
   public Node show() {
     irArea.removeAll();
     p.run();
@@ -34,11 +30,15 @@ public class TextOutTab extends SiExecTab {
     return c? "C" : "IR";
   }
   
+  public String serializeName() {
+    return c? "c" : "ir";
+  }
+  
   public Executer prep(String src, Runnable onDone) {
     return new Executer(p, src, onDone) {
       protected void onThread() throws Exception {
         String s = compileSingeliMain(src, !c);
-        p.toRun.add(() -> setContents(s));
+        p.toRun.add(() -> setContents(irArea, s));
       }
     };
   }

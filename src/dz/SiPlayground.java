@@ -5,6 +5,7 @@ import dzaima.ui.eval.PNodeGroup;
 import dzaima.ui.gui.*;
 import dzaima.ui.gui.config.GConfig;
 import dzaima.ui.gui.io.*;
+import dzaima.ui.node.Node;
 import dzaima.ui.node.ctx.*;
 import dzaima.ui.node.prop.Prop;
 import dzaima.ui.node.types.editable.EditNode;
@@ -19,13 +20,13 @@ import java.util.function.Function;
 
 public class SiPlayground extends NodeWindow {
   public static final Path LOCAL_CFG = Paths.get("local.dzcfg");
-  public Path savePath = Paths.get("current.singeli");
+  public final Path savePath, layoutPath;
+  public final Path runnerPath;
+  public boolean initialized = false;
   
   public String bqn;
   public Path singeliPath;
   public final String[] singeliArgs;
-  public final String externalRunner;
-  public final boolean hasScalable;
   public Path exec = Paths.get("exec/");
   
   public OutputTab output;
@@ -33,26 +34,32 @@ public class SiPlayground extends NodeWindow {
   public EditNode noteNode;
   
   private final VarList varsNode;
+  public final Node layoutPlace;
   public final Vec<Var> vars = new Vec<>();
   
   public final Vec<SiExecTab> tabs = new Vec<>();
-  
   public final ConcurrentLinkedQueue<Runnable> toRun = new ConcurrentLinkedQueue<>();
   
-  public SiPlayground(GConfig gc, Ctx pctx, PNodeGroup g, String bqn, Path singeliPath, String[] singeliArgs, String externalRunner, int scalableCount) {
+  public SiPlayground(GConfig gc, Ctx pctx, PNodeGroup g, String bqn, Path singeliPath, String[] singeliArgs, Path savePath, Path layoutPath, Path runnerPath) {
     super(gc, pctx, g, new WindowInit("Singeli playground"));
     gc.langs().addLang("number", NumLang::new);
     this.bqn = bqn;
     this.singeliPath = Files.isDirectory(singeliPath)? singeliPath.resolve("singeli") : singeliPath;
-    this.externalRunner = externalRunner;
-    this.hasScalable = scalableCount!=-1;
+    this.runnerPath = runnerPath;
+    this.savePath = savePath;
+    this.layoutPath = layoutPath;
     this.singeliArgs = singeliArgs;
     
     try {
       Files.createDirectories(exec);
     } catch (Exception e) { throw new RuntimeException(e); }
     
-    String tabSet = Tools.readRes("defaultTabs.dzcfg");
+    String layoutSrc;
+    if (Files.exists(layoutPath)) {
+      layoutSrc = Tools.readFile(layoutPath);
+    } else {
+      layoutSrc = Tools.readRes("defaultTabs.dzcfg");
+    }
     
     HashMap<String, Function<HashMap<String, Prop>, Tab>> m = new HashMap<>();
     m.put("source", c -> source = new SourceTab(this));
@@ -62,23 +69,27 @@ public class SiPlayground extends NodeWindow {
     m.put("ir", c -> tabs.add(new TextOutTab(this, false)));
     m.put("c", c -> tabs.add(new TextOutTab(this, true)));
     
-    base.ctx.id("place").add(SerializableTab.deserializeTree(base.ctx, tabSet, m));
+    layoutPlace = base.ctx.id("place");
+    layoutPlace.add(SerializableTab.deserializeTree(base.ctx, layoutSrc, m));
     
     noteNode = output.area;
     source.load(savePath);
     varsNode = ((VarsTab) tabs.linearFind(c -> c instanceof VarsTab)).varsNode;
     
     updVars();
+    initialized = true;
   }
   
   Executer prev;
   public void run() {
+    if (!initialized) return;
     if (prev!=null) {
       prev.cancel();
       prev = null;
     }
     String src = source.code.getAll();
     Tools.writeFile(savePath, src);
+    Tools.writeFile(layoutPath, SerializableTab.serializeTree(layoutPlace.ch.get(0)));
     
     Vec<SiExecTab> open = tabs.filter(c -> c.open);
     if (open.sz > 0) {
@@ -110,7 +121,7 @@ public class SiPlayground extends NodeWindow {
   public static void main(String[] args) {
     Windows.setManager(Windows.Manager.JWM);
     if (args.length<2) {
-      System.out.println("Usage: ./run [singeli args] [--runner path/to/runner] cbqn path/to/Singeli");
+      System.out.println("Usage: ./run [singeli args] [--file file.singeli] [--layout layout.dzcfg] [--runner runner.sh] cbqn path/to/Singeli");
       return;
     }
     Windows.start(mgr -> {
@@ -128,28 +139,33 @@ public class SiPlayground extends NodeWindow {
       ctx.put("dividable", DividableNode::new);
       ctx.put("windowSplit", WindowSplitNode::new);
       
-      String runner = null;
-      int scalableCount = -1;
+      Path save = Paths.get("current.singeli");
+      Path layout = Paths.get("layout_default.dzcfg");
+      Path runner = null;
       Vec<String> singeliArgs = new Vec<>();
       for (int i = 0; i < args.length-2; ) {
         String c = args[i++];
         switch (c) {
           default: throw new IllegalStateException("Unexpected argument "+c);
-          case "-a":
-          case "-b":
+            case "-a": case "--arch":
+            case "-i": case "--infer":
+            case "-l": case "--lib":
+            case "-c": case "--config":
+            case "-p": case "--pre":
+            case "-n": case "--name":
             singeliArgs.add(c);
             singeliArgs.add(args[i++]);
             break;
-          case "--runner":
-            runner = args[i++];
-            break;
-          case "--scale":
-            scalableCount = Integer.parseInt(args[i++]);
-            break;
+          case "--file": save = Paths.get(args[i++]); break;
+          case "--runner": runner = Paths.get(args[i++]); break;
+          case "--layout": layout = Paths.get(args[i++]); break;
         }
       }
       
-      SiPlayground w = new SiPlayground(gc, ctx, gc.getProp("si.ui").gr(), args[args.length-2], Paths.get(args[args.length-1]), singeliArgs.toArray(new String[0]), runner, scalableCount);
+      SiPlayground w = new SiPlayground(
+        gc, ctx, gc.getProp("si.ui").gr(),
+        args[args.length-2], Paths.get(args[args.length-1]), singeliArgs.toArray(new String[0]),
+        save, layout, runner);
       mgr.start(w);
     });
   }

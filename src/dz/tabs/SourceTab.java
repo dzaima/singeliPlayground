@@ -44,4 +44,8 @@ public class SourceTab extends SiTab {
   public String name() {
     return "source";
   }
+  
+  public String serializeName() {
+    return "source";
+  }
 }

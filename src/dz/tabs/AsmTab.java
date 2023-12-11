@@ -25,10 +25,6 @@ public class AsmTab extends SiExecTab {
     command.append(flags);
   }
   
-  public void setContents(String s) {
-    TextOutTab.setContents(asmArea, s);
-  }
-  
   public Node show() {
     asmArea.removeAll();
     p.run();
@@ -38,6 +34,9 @@ public class AsmTab extends SiExecTab {
   public String name() {
     return title;
   }
+  
+  public String serializeName() { return "assembly"; }
+  public String serialize() { return "name="+JSON.quote(title)+" cmd="+JSON.quote(command.getAll()); }
   
   public void preMenuOptions(PartialMenu m) {
     m.addField(title, s -> {
@@ -60,7 +59,7 @@ public class AsmTab extends SiExecTab {
         String asmSrc = Tools.readFile(asm);
         
         String fmt = AsmFormatter.formatAsm(cSrc, asmSrc);
-        p.toRun.add(() -> setContents(fmt));
+        p.toRun.add(() -> TextOutTab.setContents(asmArea, fmt));
       }
     };
   }

@@ -21,4 +21,8 @@ public class OutputTab extends SiTab {
   public String name() {
     return "output";
   }
+  
+  public String serializeName() {
+    return "output";
+  }
 }

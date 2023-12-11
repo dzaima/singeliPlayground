@@ -33,7 +33,7 @@ public abstract class Executer {
     this.siArgs = r.singeliArgs;
     this.code = code;
     this.onDone = onDone;
-    this.runner = r.externalRunner;
+    this.runner = r.runnerPath==null? null : r.runnerPath.toString();
   }
   
   public void start() {

@@ -27,6 +27,9 @@ public class VarsTab extends SiExecTab {
     return "variables";
   }
   
+  public String serializeName() {
+    return "variables";
+  }
   
   public Executer prep(String src, Runnable onDone) {
     Vec<Var> vars = p.vars.map(Var::copy);

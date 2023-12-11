@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+clang -o "$3" -O1 --target=aarch64-linux-gnu "$1" > "$2" && \
+qemu-aarch64 -L /usr/aarch64-linux-gnu "$3"

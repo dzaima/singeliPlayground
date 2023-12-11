@@ -5,7 +5,7 @@ import dzaima.ui.gui.PartialMenu;
 import dzaima.ui.gui.io.Click;
 import dzaima.ui.node.types.tabs.*;
 
-public abstract class SiTab extends Tab {
+public abstract class SiTab extends Tab implements SerializableTab {
   public final SiPlayground p;
   public SiTab(SiPlayground p) {
     super(p.ctx);
