@@ -11,23 +11,18 @@ def _playground_display{name, r} = {
   if (not _playground_typed{r}) _playground_err{'Cannot display value with kind ', kind{r}}
   def T = type{r}
   
-  printf{'<VAR_SET_BEGIN>'}
   def printType{C} = match (typekind{C}) {
-    {('primitive')} => printf{merge{quality{C},fmtnat{width{C}}}}
-    {('vector')}    => { printf{merge{'[',fmtnat{vcount{C}},']'}}; printType{eltype{C}} }
-    # {('pointer')}   => { printf{'*'};                              printType{eltype{C}} }
+    {('primitive')} => merge{quality{C},fmtnat{width{C}}}
+    {('vector')}    => merge{'[',fmtnat{vcount{C}},']', printType{eltype{C}}}
     {_} => _playground_err{'Cannot display value with typekind ', typekind{T}}
   }
   
   def scale = _playground_scale{}
-  printType{T}; printf{';'}
-  printf{'%d;', scale}
-  printf{'%s;', merge{'"',name,'"'}}
   
-  rReg:=r
   def bytes = _playground_bytes{T, scale}
-  printf{'%d;', bytes}
   
+  printf{merge{'<VAR_SET_BEGIN>', printType{T}, ';%d;%s;%d;'}, scale, merge{'"',name,'"'}, bytes}
+  rReg:=r
   def rPtr = emit{__pnt{void}, '&', rReg}
   emit{void, 'fwrite', rPtr, 1, bytes, 'stderr'}
   
