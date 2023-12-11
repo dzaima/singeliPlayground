@@ -22,7 +22,7 @@ import java.util.stream.Stream;
 
 public class SiPlayground extends NodeWindow {
   public static final Path LOCAL_CFG = Paths.get("local.dzcfg");
-  public final Path savePath, layoutPath;
+  public final Path layoutPath;
   public final Path runnerPath;
   public boolean initialized = false;
   
@@ -47,7 +47,6 @@ public class SiPlayground extends NodeWindow {
     this.bqn = bqn;
     this.singeliPath = Files.isDirectory(singeliPath)? singeliPath.resolve("singeli") : singeliPath;
     this.runnerPath = runnerPath;
-    this.savePath = savePath;
     this.layoutPath = layoutPath;
     this.singeliArgs = singeliArgs;
     
@@ -64,10 +63,10 @@ public class SiPlayground extends NodeWindow {
     
     HashMap<String, Function<HashMap<String, Prop>, Tab>> m = new HashMap<>();
     VarsTab varsTab = new VarsTab(this);
-    source = new SourceTab(this);
-    source.load(savePath);
+    source = new SourceTab(this, savePath, true);
     output = new OutputTab(this);
     m.put("source", c -> source);
+    m.put("externalSource", c -> new SourceTab(this, Paths.get(c.get("path").str()), false));
     m.put("output", c -> output);
     m.put("variables", c -> varsTab);
     m.put("assembly", c -> new AsmTab(this, c.get("name").str(), c.get("cmd").str()));
@@ -89,7 +88,9 @@ public class SiPlayground extends NodeWindow {
   private final LinkedHashMap<SiExecTab, Executer> queue = new LinkedHashMap<>(); // first entry is the active one
   public void save() {
     if (!initialized) return;
-    Tools.writeFile(savePath, source.code.getAll());
+    for (SiTab t : allTabs()) {
+      if (t instanceof SourceTab) ((SourceTab) t).save();
+    }
     Tools.writeFile(layoutPath, SerializableTab.serializeTree(layoutPlace.ch.get(0)));
   }
   public void run(SiExecTab t) {
@@ -120,6 +121,19 @@ public class SiPlayground extends NodeWindow {
     if (!initialized) return;
     save();
     for (SiExecTab c : openTabs) run(c);
+  }
+  
+  public Vec<SiTab> allTabs() {
+    Vec<SiTab> r = new Vec<>();
+    collectRec(r, layoutPlace.ch.get(0));
+    return r;
+  }
+  private void collectRec(Vec<SiTab> tabs, Node n) {
+    if (n instanceof WindowSplitNode) {
+      for (Node c : n.ch) collectRec(tabs, c);
+    } else if (n instanceof TabbedNode) {
+      for (Tab t : Vec.of(((TabbedNode) n).getTabs())) tabs.add((SiTab)t);
+    }
   }
   
   public void tick() {
@@ -196,12 +210,21 @@ public class SiPlayground extends NodeWindow {
     if (varsNode!=null) varsNode.mResize();
   }
   
+  private Path prevOpen;
   public boolean key(Key key, int scancode, KeyAction a) {
     switch (gc.keymap(key, a, "si")) {
       case "devtools": createTools(); return true;
       case "run": runAll(); return true;
       case "fontPlus":  gc.setEM(gc.em+1); return true;
       case "fontMinus": gc.setEM(gc.em-1); return true;
+      case "open":
+        openFile(null, prevOpen, r -> {
+          if (r==null) return;
+          prevOpen = r;
+          SiTab t = allTabs().linearFind(c -> c instanceof SourceTab && ((SourceTab) c).main);
+          t.w.o.addSelectedTab(new SourceTab(this, r, false));
+        });
+        return true;
     }
     return super.key(key, scancode, a);
   }

@@ -4,6 +4,7 @@ si {
     run = { "ctrl+s" "ctrl+enter" "shift+enter" "alt+enter" }
     fontPlus = { "ctrl+shift+=" "ctrl+plus" }
     fontMinus = { "ctrl+minus" }
+    open = { "ctrl+o" }
   }
   ui = h { bg=bg.back
     id=place

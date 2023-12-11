@@ -41,17 +41,7 @@ public class AsmTab extends SiExecTab {
   public String serialize() { return "name="+JSON.quote(title)+" cmd="+JSON.quote(command.getAll()); }
   
   public boolean closable() {
-    Vec<Tab> tabs = new Vec<>();
-    collectRec(tabs, p.layoutPlace.ch.get(0));
-    tabs.filterInplace(c -> c instanceof AsmTab);
-    return tabs.sz>1;
-  }
-  private void collectRec(Vec<Tab> tabs, Node n) {
-    if (n instanceof WindowSplitNode) {
-      for (Node c : n.ch) collectRec(tabs, c);
-    } else if (n instanceof TabbedNode) {
-      tabs.addAll(Vec.of(((TabbedNode) n).getTabs()));
-    }
+    return p.allTabs().filter(c -> c instanceof AsmTab).sz>1;
   }
   
   public void addMenuBarOptions(PartialMenu m) {
