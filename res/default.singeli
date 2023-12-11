@@ -6,27 +6,31 @@ if (hasarch{'X86_64'}) {
 } else if (hasarch{'AARCH64'}) {
   include 'arch/neon_intrin/basic'
 }
+
 fn f{V}(x:*V) = load{x,10} + vec_broadcast{V, 1}
+
 export{'f_8xi16', f{[8]i16}}
 export{'f_4xi32', f{[4]i32}}
 if (hasarch{'AVX2'}) export{'f_8xi32', f{[8]i32}}
 
-⍎
-
-# 'name ← expression' to set/update watch
-# 'name:← expression' to set only if name doesn't already exist
-# 'name:↩ expression' to update existing watch
-# display{'name', expression} to set watch with regular Singeli code
-# variables from a watch can be read as regular variables
-c:← i32~~1
-c ↩ c+1
-def V = [8]i16
-data:*i16 = tup{0,1,2,3,4,5,6,7}
-
-a ← vec_broadcast{V, 1000}
-b ← a + load{*V~~data, 0}
-
-display{'foo', a * b}
-
-# before '⍎' is top-level Singeli code, afterwards is the contents of the main() function
-# alternatively, a custom main() can be defined, but then ←/↩ won't work (display{} still does)
+main() : i32 = {
+  _playground_load # replaced with code to load existing watches
+  # if not present, ←/↩ won't work (display{} still will)
+  
+  # 'name ← expression' to set/update watch
+  # 'name:← expression' to set only if name doesn't already exist
+  # 'name:↩ expression' to update existing watch
+  # display{'name', expression} to set watch with regular Singeli code
+  # variables from a watch can be read as regular variables
+  c:← i32~~1
+  c ↩ c+1
+  def V = [8]i16
+  data:*i16 = tup{0,1,2,3,4,5,6,7}
+  
+  a ← vec_broadcast{V, 1000}
+  b ← a + load{*V~~data, 0}
+  
+  display{'foo', a * b}
+  
+  0
+}

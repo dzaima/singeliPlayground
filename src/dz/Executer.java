@@ -107,25 +107,29 @@ public abstract class Executer {
     StringBuilder siMain = new StringBuilder();
     siMain.append("include ").append(siQuote(Tools.RES_DIR.resolve("replPrep").toAbsolutePath().toString())).append(';');
     StringBuilder siREPL = new StringBuilder();
+    
+    StringBuilder loadB = new StringBuilder();
+    for (Pair<String, SiType> p : prevVars) loadB.append(p.a).append(":=_playground_load{").append(p.b.toSingeli()).append("};");
+    if (loadB.length()>0) loadB.deleteCharAt(loadB.length()-1);
+    String loads = loadB.toString();
+    
+    
     boolean inREPL = false;
     for (String l : Tools.split(siCode, '\n')) {
+      StringBuilder curr = inREPL? siREPL : siMain;
       if (l.startsWith("cinit ")) {
         c.append(l.substring(6)).append('\n');
       } else if (l.equals("⍎")) {
         if (inREPL) throw new ExpException("Multiple ⍎s found");
         inREPL = true;
-        siREPL.append("main:i32 = {");
-        for (Pair<String, SiType> p : prevVars) {
-          siREPL.append(p.a).append(":=_playground_load{").append(p.b.toSingeli()).append("};");
-        }
-      } else if (!inREPL) {
-        siMain.append(l);
+        siREPL.append("main:i32 = {").append(loads);
       } else {
+        l = l.replaceAll("_playground_load", loads);
         Matcher m = P_ASGN.matcher(l);
         while (m.find()) {
           String name = m.group(1);
           if (name==null) {
-            m.appendReplacement(siREPL, m.group());
+            m.appendReplacement(curr, m.group());
             continue;
           }
           boolean onlyFirst = m.group(2).equals(":");
@@ -138,15 +142,15 @@ public abstract class Executer {
             return newMap.size();
           });
           
-          m.appendReplacement(siREPL,
+          m.appendReplacement(curr,
             onlyFirst && !isNew? "@_playground_dontRun("+name+") " :
             mod || !isNew? "@_playground_varUpd(tup{"+name+","+siQuote(name)+"}) " :
             name+" := @_playground_varSet("+siQuote(name)+") "
           );
         }
-        m.appendTail(siREPL);
+        m.appendTail(curr);
       }
-      (inREPL? siREPL : siMain).append('\n');
+      curr.append('\n');
     }
     
     if (inREPL) siREPL.append("0}");
