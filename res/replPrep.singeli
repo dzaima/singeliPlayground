@@ -17,7 +17,7 @@ def _playground_display{name, r} = {
     {_} => _playground_err{'Cannot display value with typekind ', typekind{T}}
   }
   
-  def scale = _playground_scale{}
+  def scale = if (is{typekind{T},'vector'}) _playground_scale{} else 1
   
   def bytes = _playground_bytes{T, scale}
   
