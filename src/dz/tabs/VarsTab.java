@@ -35,7 +35,7 @@ public class VarsTab extends SiExecTab {
   public Executer prep(String src, Runnable onDone) {
     Vec<Var> vars = p.vars.map(Var::copy);
     
-    return new Executer(this, p, src, onDone) {
+    return new Executer(p, src, onDone) {
       protected void onThread() throws Exception {
         Preprocessed pre = preprocess(code, vars.map(c -> new Pair<>(c.name, c.type)));
         Executed o = compileSingeli(pre.siMain + pre.siREPL, false);
@@ -95,7 +95,7 @@ public class VarsTab extends SiExecTab {
         
         note(t.out);
         note(new String(realErr.get(), StandardCharsets.UTF_8));
-        if (t.code!=0) note("Exit code: "+t.code);
+        noteIfExitCode(t);
         
         p.toRun.add(() -> {
           HashMap<String, Integer> m = new HashMap<>();

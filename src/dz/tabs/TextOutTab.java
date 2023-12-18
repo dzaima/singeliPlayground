@@ -36,7 +36,7 @@ public class TextOutTab extends SiExecTab {
   }
   
   public Executer prep(String src, Runnable onDone) {
-    return new Executer(this, p, src, onDone) {
+    return new Executer(p, src, onDone) {
       protected void onThread() throws Exception {
         String s = compileSingeliMain(src, !c);
         p.toRun.add(() -> setContents(irArea, s));
@@ -49,6 +49,7 @@ public class TextOutTab extends SiExecTab {
     XY rel = e.relPos(sc);
     e.removeAll();
     e.append(s);
+    e.um.clear();
     ScrollNode.scrollTo(e, ScrollNode.Mode.INSTANT, ScrollNode.Mode.INSTANT,
       (sc.clipSX+sc.clipEX)/2-rel.x,
       (sc.clipSY+sc.clipEY)/2-rel.y);

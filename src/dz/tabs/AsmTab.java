@@ -5,7 +5,6 @@ import dzaima.ui.gui.PartialMenu;
 import dzaima.ui.node.Node;
 import dzaima.ui.node.types.editable.EditNode;
 import dzaima.ui.node.types.editable.code.CodeAreaNode;
-import dzaima.ui.node.types.tabs.*;
 import dzaima.utils.*;
 
 import java.nio.file.Path;
@@ -20,10 +19,11 @@ public class AsmTab extends SiExecTab {
     super(p);
     this.title = title;
     node = p.ctx.make(p.gc.getProp("si.asmUI").gr());
-    asmArea = (CodeAreaNode) node.ctx.id("asm");
     command = (EditNode) node.ctx.id("ccFlags");
-    asmArea.setLang(p.gc.langs().fromName("x86 assembly"));
     command.append(flags);
+    
+    asmArea = (CodeAreaNode) node.ctx.id("asm");
+    asmArea.setLang(p.asmLang);
   }
   
   public Node show() {
@@ -57,7 +57,7 @@ public class AsmTab extends SiExecTab {
   
   public Executer prep(String src, Runnable onDone) {
     String[] cmd = Tools.split(command.getAll(), ' ');
-    return new Executer(this, p, src, onDone) {
+    return new Executer(p, src, onDone) {
       protected void onThread() throws Exception {
         Path c = tmpFile(".c");
         Path asm = tmpFile(".asm");

@@ -9,6 +9,7 @@ import dzaima.ui.node.Node;
 import dzaima.ui.node.ctx.*;
 import dzaima.ui.node.prop.Prop;
 import dzaima.ui.node.types.editable.EditNode;
+import dzaima.ui.node.types.editable.code.Lang;
 import dzaima.ui.node.types.tabs.*;
 import dzaima.utils.*;
 import io.github.humbleui.skija.Surface;
@@ -28,8 +29,10 @@ public class SiPlayground extends NodeWindow {
   
   public String bqn;
   public Path singeliPath;
-  public final String[] singeliArgs;
+  public final String[] singeliArgList;
+  public final Vec<Pair<String,String>> singeliArgs;
   public Path execTmp = Paths.get("exec/");
+  public Lang asmLang;
   
   public OutputTab output;
   public SourceTab source;
@@ -41,7 +44,7 @@ public class SiPlayground extends NodeWindow {
   
   public final ConcurrentLinkedQueue<Runnable> toRun = new ConcurrentLinkedQueue<>();
   
-  public SiPlayground(GConfig gc, Ctx pctx, PNodeGroup g, String bqn, Path singeliPath, String[] singeliArgs, Path savePath, Path layoutPath, Path runnerPath) {
+  public SiPlayground(GConfig gc, Ctx pctx, PNodeGroup g, String bqn, Path singeliPath, Vec<Pair<String,String>> singeliArgs, Path savePath, Path layoutPath, Path runnerPath) {
     super(gc, pctx, g, new WindowInit("Singeli playground"));
     gc.langs().addLang("number", new NumLang());
     this.bqn = bqn;
@@ -49,6 +52,14 @@ public class SiPlayground extends NodeWindow {
     this.runnerPath = runnerPath;
     this.layoutPath = layoutPath;
     this.singeliArgs = singeliArgs;
+    this.asmLang = gc.langs().fromName("x86 assembly");
+    
+    Vec<String> argList = new Vec<>();
+    for (Pair<String, String> c : singeliArgs) {
+      argList.add(c.a);
+      argList.add(c.b);
+    }
+    this.singeliArgList = argList.toArray(new String[0]);
     
     try {
       Files.createDirectories(execTmp);
@@ -81,11 +92,37 @@ public class SiPlayground extends NodeWindow {
     
     updVars();
     initialized = true;
+    
+    Box<String> lang = new Box<>();
+    run((code, onDone) -> new Executer(SiPlayground.this, "each{show,listarch{}}", () -> {
+      onDone.run();
+      asmLang = gc.langs().fromName(lang.get());
+      for (SiTab tab : allTabs()) if (tab instanceof AsmTab) ((AsmTab) tab).asmArea.setLang(asmLang);
+    }) {
+      protected void onThread() throws Exception {
+        status("detecting architecture...");
+        Executed e = compileSingeli(code, true);
+        note(e.err);
+        for (String l : Tools.split(e.out, '\n')) {
+          if (l.length() > 2) {
+            switch (l.substring(1, l.length()-1)) {
+              case "X86_64":  lang.set("x86 assembly"); break;
+              case "AARCH64": lang.set("aarch64 assembly"); break;
+              case "RV64":    lang.set("risc-v assembly"); break;
+            }
+          }
+        }
+      }
+    });
   }
   
   public final LinkedHashSet<SiExecTab> openTabs = new LinkedHashSet<>();
   
-  private final LinkedHashMap<SiExecTab, Executer> queue = new LinkedHashMap<>(); // first entry is the active one
+  
+  public interface ExecuterKey {
+    Executer prep(String code, Runnable onDone);
+  }
+  private final LinkedHashMap<ExecuterKey, Executer> queue = new LinkedHashMap<>(); // first entry is the active one
   public void save() {
     if (!initialized) return;
     for (SiTab t : allTabs()) {
@@ -93,7 +130,7 @@ public class SiPlayground extends NodeWindow {
     }
     Tools.writeFile(layoutPath, SerializableTab.serializeTree(layoutPlace.ch.get(0)));
   }
-  public void run(SiExecTab t) {
+  public void run(ExecuterKey t) {
     if (!initialized) return;
     Executer ex = t.prep(source.code.getAll(), () -> {
       queue.remove(t);
@@ -177,7 +214,7 @@ public class SiPlayground extends NodeWindow {
       Path save = Paths.get("current.singeli");
       Path layout = Paths.get("layout_default.dzcfg");
       Path runner = null;
-      Vec<String> singeliArgs = new Vec<>();
+      Vec<Pair<String,String>> singeliArgs = new Vec<>();
       for (int i = 0; i < args.length-2; ) {
         String c = args[i++];
         switch (c) {
@@ -188,8 +225,7 @@ public class SiPlayground extends NodeWindow {
             case "-c": case "--config":
             case "-p": case "--pre":
             case "-n": case "--name":
-            singeliArgs.add(c);
-            singeliArgs.add(args[i++]);
+            singeliArgs.add(new Pair<>(c, args[i++]));
             break;
           case "--file": save = Paths.get(args[i++]); break;
           case "--runner": runner = Paths.get(args[i++]); break;
@@ -199,7 +235,7 @@ public class SiPlayground extends NodeWindow {
       
       SiPlayground w = new SiPlayground(
         gc, ctx, gc.getProp("si.ui").gr(),
-        args[args.length-2], Paths.get(args[args.length-1]), singeliArgs.toArray(new String[0]),
+        args[args.length-2], Paths.get(args[args.length-1]), singeliArgs,
         save, layout, runner);
       mgr.start(w);
     });

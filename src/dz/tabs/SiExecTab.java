@@ -2,7 +2,7 @@ package dz.tabs;
 
 import dz.*;
 
-public abstract class SiExecTab extends SiTab {
+public abstract class SiExecTab extends SiTab implements SiPlayground.ExecuterKey {
   protected SiExecTab(SiPlayground p) {
     super(p);
   }

@@ -12,7 +12,6 @@ import java.util.concurrent.locks.*;
 import java.util.regex.*;
 
 public abstract class Executer {
-  public final SiExecTab tab;
   protected final SiPlayground r;
   protected final String bqnExe, siExe;
   protected final String[] siArgs;
@@ -27,13 +26,12 @@ public abstract class Executer {
   private final Lock l = new ReentrantLock();
   private Thread thread;
   
-  protected Executer(SiExecTab tab, SiPlayground r, String code, Runnable onDone) {
-    this.tab = tab;
+  protected Executer(SiPlayground r, String code, Runnable onDone) {
     this.r = r;
     this.tmpDir = r.execTmp;
     this.bqnExe = r.bqn;
     this.siExe = r.singeliPath.toAbsolutePath().toString();
-    this.siArgs = r.singeliArgs;
+    this.siArgs = r.singeliArgList;
     this.code = code;
     this.onDone = onDone;
     this.runner = r.runnerPath==null? null : r.runnerPath.toString();
@@ -238,6 +236,9 @@ public abstract class Executer {
     r.code = p.waitFor();
     return r;
   }
+  protected void noteIfExitCode(Executed e) {
+    if (e.code!=0) note("Exit code: "+e.code);
+  }
   
   protected Executed compileSingeli(String src, boolean ir) throws Exception { // throws if failed
     status("Compiling singeli...");
@@ -261,6 +262,7 @@ public abstract class Executer {
       note("Failed to compile Singeli code:\n");
       note(r.out);
       note(r.err);
+      noteIfExitCode(r);
       throw new ExpException();
     }
     r.custom = Tools.readFile(tmpOut);
