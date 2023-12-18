@@ -2,7 +2,7 @@ package dz;
 
 
 import dzaima.ui.gui.Font;
-import dzaima.ui.node.types.editable.code.*;
+import dzaima.ui.node.types.editable.code.langs.*;
 import io.github.humbleui.skija.paragraph.TextStyle;
 
 import java.util.Arrays;

@@ -9,7 +9,7 @@ import dzaima.ui.node.Node;
 import dzaima.ui.node.ctx.*;
 import dzaima.ui.node.prop.Prop;
 import dzaima.ui.node.types.editable.EditNode;
-import dzaima.ui.node.types.editable.code.Lang;
+import dzaima.ui.node.types.editable.code.langs.Lang;
 import dzaima.ui.node.types.tabs.*;
 import dzaima.utils.*;
 import io.github.humbleui.skija.Surface;
