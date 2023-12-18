@@ -22,7 +22,7 @@ public class AsmTab extends SiExecTab {
     node = p.ctx.make(p.gc.getProp("si.asmUI").gr());
     asmArea = (CodeAreaNode) node.ctx.id("asm");
     command = (EditNode) node.ctx.id("ccFlags");
-    asmArea.setLang(p.gc.langs().fromName("Assembly"));
+    asmArea.setLang(p.gc.langs().fromName("x86 assembly"));
     command.append(flags);
   }
   

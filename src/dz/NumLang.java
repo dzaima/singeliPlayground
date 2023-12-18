@@ -12,16 +12,12 @@ public class NumLang extends Lang {
     0xffD2D2D2, // 0 default
     0xff777777, // 1 leading zero
   };
-  public TextStyle[] styles;
-  public TextStyle style(byte v) {
-    return styles[v];
-  }
-  
-  public NumLang(Font f) {
+  public NumLang() {
     super(new NumState());
-    styles = Lang.colors(cols, f);
   }
-  public Lang font(Font f) { return new NumLang(f); }
+  protected TextStyle[] genStyles(Font f) {
+    return Lang.colors(cols, f);
+  }
   
   private static class NumState extends LangState<NumState> {
     public NumState after(int sz, char[] p, byte[] b) {

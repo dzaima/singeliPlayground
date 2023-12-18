@@ -43,7 +43,7 @@ public class SiPlayground extends NodeWindow {
   
   public SiPlayground(GConfig gc, Ctx pctx, PNodeGroup g, String bqn, Path singeliPath, String[] singeliArgs, Path savePath, Path layoutPath, Path runnerPath) {
     super(gc, pctx, g, new WindowInit("Singeli playground"));
-    gc.langs().addLang("number", NumLang::new);
+    gc.langs().addLang("number", new NumLang());
     this.bqn = bqn;
     this.singeliPath = Files.isDirectory(singeliPath)? singeliPath.resolve("singeli") : singeliPath;
     this.runnerPath = runnerPath;
