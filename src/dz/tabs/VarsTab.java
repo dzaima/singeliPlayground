@@ -37,7 +37,7 @@ public class VarsTab extends SiExecTab {
     return new Executer(p, src, onDone) {
       protected void onThread() throws Exception {
         Preprocessed pre = preprocess(code, vars.map(c -> new Pair<>(c.name, c.type)));
-        Executed o = compileSingeli(pre.siMain + pre.siREPL, false);
+        Executed o = compileSingeli(pre.siMain + pre.siREPL, false, false);
         note(o.out);
         note(o.err);
         

@@ -61,7 +61,7 @@ public class AsmTab extends SiExecTab {
         Path c = tmpFile(".c");
         Path asm = tmpFile(".asm");
         
-        String cSrc = compileSingeliMain(src, false);
+        String cSrc = compileSingeliMain(src, false, true);
         
         Tools.writeFile(c, cSrc);
         compileC(cmd, "-o", asm.toString(), "-S", c.toString());

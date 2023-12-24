@@ -103,7 +103,7 @@ public class SiPlayground extends NodeWindow {
     }) {
       protected void onThread() throws Exception {
         status("detecting architecture...");
-        Executed e = compileSingeli(code, true);
+        Executed e = compileSingeli(code, true, false);
         note(e.err);
         for (String l : Tools.split(e.out, '\n')) {
           if (l.length() > 2) {

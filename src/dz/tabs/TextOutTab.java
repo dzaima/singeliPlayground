@@ -37,7 +37,7 @@ public class TextOutTab extends SiExecTab {
   public Executer prep(String src, Runnable onDone) {
     return new Executer(p, src, onDone) {
       protected void onThread() throws Exception {
-        String s = compileSingeliMain(src, !c);
+        String s = compileSingeliMain(src, !c, true);
         p.toRun.add(() -> setContents(irArea, s));
       }
     };

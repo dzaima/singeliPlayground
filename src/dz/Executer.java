@@ -240,7 +240,7 @@ public abstract class Executer {
     if (e.code!=0) note("Exit code: "+e.code);
   }
   
-  protected Executed compileSingeli(String src, boolean ir) throws Exception { // throws if failed
+  protected Executed compileSingeli(String src, boolean ir, boolean sink) throws Exception { // throws if failed
     status("Compiling singeli...");
     Path tmpIn = tmpFile(".singeli");
     Path tmpOut = tmpFile(".c");
@@ -252,10 +252,8 @@ public abstract class Executer {
     for (String c : siArgs) cmd.add(c);
     cmd.add("-o");
     cmd.add(tmpOut.toString());
-    if (ir) {
-      cmd.add("-t");
-      cmd.add("ir");
-    }
+    if (ir)   { cmd.add("-t"); cmd.add("ir"); }
+    if (sink) { cmd.add("-c"); cmd.add("_playground_displaySink=1"); }
     cmd.add(tmpIn.toString());
     Executed r = execCollect(cmd.toArray(new String[0]), new byte[0]);
     if (r.code!=0) {
@@ -269,12 +267,16 @@ public abstract class Executer {
     return r;
   }
   
-  protected String compileSingeliMain(String src, boolean ir) throws Exception {
+  protected String compileSingeliMain(String src, boolean ir, boolean sink) throws Exception {
     Preprocessed pre = preprocess(src, new Vec<>());
-    Executed o = compileSingeli(pre.siMain, ir);
+    Executed o = compileSingeli(pre.siMain, ir, sink);
     note(o.out);
     note(o.err);
-    return ir? o.custom : pre.c + "\n" + o.custom;
+    if (ir) return o.custom;
+    String res = pre.c + "\n" + o.custom;
+    // if (res.contains("_playground_sink")) res = "volatile void* _playground_sink_ptr;\n#define _playground_sink(X) *(volatile typeof(X)*)_playground_sink_ptr = X;\n" + res;
+    if (res.contains("_playground_sink")) res = "#define _playground_sink(X)\n" + res;
+    return res;
   }
   
   protected void compileC(String[] init, String... more) throws Exception {

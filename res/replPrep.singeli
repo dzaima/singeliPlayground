@@ -1,5 +1,6 @@
 include 'debug/printf'
 if (hasarch{'RVV'}) require{'riscv_vector.h'}
+config _playground_displaySink = 0
 
 def _playground_scale{} = if (hasarch{'RVV'}) __div{emit{u32, '__riscv_vlenb'},16} else 1
 def _playground_err{...a} = { show{merge{...a}}; ({}=>0){0} }
@@ -21,13 +22,16 @@ def _playground_display{name, r} = {
   
   def bytes = _playground_bytes{T, scale}
   
-  printf{merge{'<VAR_SET_BEGIN>', printType{T}, ';%d;%s;%d;'}, scale, merge{'"',name,'"'}, bytes}
-  rReg:=r
-  def rPtr = emit{__pnt{void}, '&', rReg}
-  emit{void, 'fwrite', rPtr, 1, bytes, 'stderr'}
+  if (_playground_displaySink) {
+    emit{void, '_playground_sink', r}
+  } else {
+    printf{merge{'<VAR_SET_BEGIN>', printType{T}, ';%d;%s;%d;'}, scale, merge{'"',name,'"'}, bytes}
+    rReg:=r
+    def rPtr = emit{__pnt{void}, '&', rReg}
+    emit{void, 'fwrite', rPtr, 1, bytes, 'stderr'}
+    emit{void, 'fflush', 'stderr'}
+  }
   
-  
-  emit{void, 'fflush', 'stderr'}
   r
 }
 
