@@ -32,7 +32,10 @@ public class Var {
     n = r.base.ctx.make(r.gc.getProp("si.vlUI").gr());
     nameNode = n.ctx.id("name");
     
-    types.add(new TVar(this, type.isBitVec()? Math.min(64, type.widthBits()) : type.elBits(), type.isBitVec()? TyRepr.BIN : type.repr));
+    types.add(new TVar(this,
+      type.isBitVec()? type.reinterpretScale1(TyRepr.MASK, Math.min(64, type.widthBits()))
+      :                type.reinterpretScale1(type.repr, type.elBits())
+    ));
     
     btns = new Vec<>();
     Node btnList = n.ctx.id("btns");
@@ -60,13 +63,13 @@ public class Var {
         }
         if (aw!=-1) {
           for (TVar ct : types) {
-            if (ct.elBits==aw && ct.qual.f()==at.f()) {
+            if (ct.type.elBits()==aw && ct.type.repr.f()==at.f()) {
               types.remove(ct);
               updList();
               return;
             }
           }
-          types.add(new TVar(this, aw, at));
+          types.add(new TVar(this, type.reinterpretScale1(at, aw)));
           updList();
         }
       });
@@ -85,7 +88,7 @@ public class Var {
     HashSet<String> tyNames = new HashSet<>();
     for (TVar c : types) {
       n.add(c.n);
-      tyNames.add(c.qual==TyRepr.FLOAT? "f"+c.elBits : ""+c.elBits);
+      tyNames.add(c.type.repr.f()? "f"+c.type.elBits() : ""+c.type.elBits());
     }
     Prop bgOff = n.gc.getProp("coloredBtn.bgDef");
     Prop bgOn = n.gc.getProp("coloredBtn.bgGreen");
@@ -102,22 +105,25 @@ public class Var {
   }
   
   public long[] read(int elBits) { // read as elBits-sized unsigned integers 
-    int by = elBits/8;
-    long[] res = new long[data.length/by];
+    int by = Math.max(elBits/8, 1);
+    int bm = elBits>=8? 0xff : (1<<elBits)-1;
+    long[] res = new long[type.widthBits()/elBits];
     for (int i = 0; i < res.length; i++) {
       long c = 0;
-      for (int j = 0; j < by; j++) c|= ((long) (data[i*by+j]&0xff)) << (8*j);
+      for (int j = 0; j < by; j++) c|= ((long) (data[i*by+j]&bm)) << (8*j);
       res[i] = c;
     }
     return res;
   }
   
-  public void store(long[] vs) {
-    int by = data.length/vs.length;
+  public void store(SiType type, long[] vs) {
+    int bits = type.elBits();
+    int bytes = (bits+7) / 8;
+    assert bytes*8 == bits || vs.length==1;
     for (int i = 0; i < vs.length; i++) {
       long c = vs[i];
-      for (int j = 0; j < by; j++) {
-        data[i*by + j] = (byte) (c&0xff);
+      for (int j = 0; j < bytes; j++) {
+        data[i*bytes + j] = (byte) (c&0xff);
         c>>= 8;
       }
     }
@@ -125,7 +131,7 @@ public class Var {
   }
   
   public String type() {
-    String elt = (type.repr==TyRepr.SIGNED?"i":type.repr==TyRepr.FLOAT?"f":"u")+type.elBits();
+    String elt = type.repr.qual+type.elBits();
     if (scalar) return elt;
     String sc = type.scale>1? type.scale+"×" : "";
     return sc+"["+type.unscaledCount()+"]"+elt;

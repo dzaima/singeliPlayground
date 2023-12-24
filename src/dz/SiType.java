@@ -11,12 +11,20 @@ public class SiType {
     this.count = count;
     this.primWidth = primWidth;
     this.scale = count==-1? 1 : scale;
+    assert scalar() || count>=1;
+  }
+  public SiType withRepr(TyRepr r) {
+    return new SiType(r, count, primWidth, scale);
+  }
+  public SiType reinterpretScale1(TyRepr repr, int elBits) {
+    assert elBits <= widthBits() : "reinterpreting "+dbg()+" to elBits=="+elBits;
+    return new SiType(repr, widthBits()/elBits, elBits, 1);
   }
   
-  public int widthBits() {
+  public int widthBits() { // scaled up
     return count==-1? primWidth : count*primWidth;
   }
-  public int widthBytes() {
+  public int widthBytes() { // scaled up, rounded up
     return (widthBits()+7)/8;
   }
   public int elBits() {
@@ -52,8 +60,13 @@ public class SiType {
   }
   
   public String toSingeli() {
-    String e = repr.repr + primWidth;
+    String e = repr.fmt + primWidth;
     return scalar()? e : "["+unscaledCount()+"]"+e;
+  }
+  
+  public String dbg() {
+    String e = repr.fmt + primWidth;
+    return scalar()? e : scale+"×["+unscaledCount()+"]"+e;
   }
   
   public boolean equals(Object o) {

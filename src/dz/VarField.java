@@ -27,12 +27,12 @@ public class VarField extends CodeFieldNode {
   }
   
   public boolean enter(int mod) {
-    long[] vs = new long[tvar.count];
-    for (int j = 0; j < tvar.count; j++) {
+    long[] vs = new long[tvar.type.count()];
+    for (int j = 0; j < tvar.type.count(); j++) {
       String s = tvar.fs.get(j).getAll().replace("_","");
       long c;
       try {
-        TyRepr parseType = tvar.qual;
+        TyRepr parseType = tvar.type.repr;
         if (s.startsWith("0x")) { s=s.substring(2); parseType=TyRepr.HEX; }
         if (s.startsWith("0b")) { s=s.substring(2); parseType=TyRepr.BIN; }
         if (s.startsWith("m"))  { s=s.substring(1); parseType=TyRepr.BIN; s = new StringBuilder(s).reverse().toString(); }
@@ -42,7 +42,7 @@ public class VarField extends CodeFieldNode {
           case UNSIGNED: c = Long.parseUnsignedLong(s); break;
           case SIGNED: c = Long.parseLong(s); break;
           case FLOAT:
-            c = tvar.elBits==32? Float.floatToIntBits(Float.parseFloat(s))&0xffffffffL
+            c = tvar.type.elBits()==32? Float.floatToIntBits(Float.parseFloat(s))&0xffffffffL
               : Double.doubleToRawLongBits(Double.parseDouble(s));
             break;
           default: c = -1;
@@ -50,7 +50,7 @@ public class VarField extends CodeFieldNode {
       } catch (NumberFormatException e) { c = 0; }
       vs[j] = c;
     }
-    tvar.v.store(vs);
+    tvar.v.store(tvar.type, vs);
     return true;
   }
   

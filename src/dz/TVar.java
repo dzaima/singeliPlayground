@@ -8,23 +8,20 @@ import dzaima.utils.*;
 public class TVar {
   public final Var v;
   public final Node n;
-  public final int elBits;
-  public final int count;
-  public TyRepr qual;
+  public final SiType type;
   public final Vec<VarField> fs = new Vec<>();
   
   private final Node nextText;
   
-  public TVar(Var v, int elBits, TyRepr q) {
+  public TVar(Var v, SiType t0) {
     this.v = v;
-    this.elBits = elBits;
-    this.qual = q;
+    this.type = t0;
     n = v.n.ctx.make(v.r.gc.getProp("si.hlUI").gr());
     Node vl = n.ctx.id("list");
-    count = v.type.widthBits()/elBits;
-    int hc = 32 / (elBits/8);
-    hc = Math.min(count, hc);
-    for (int i = 0; i < count/hc; i++) {
+    int hc = (t0.repr.bits()? 64 : 256) / t0.elBits(); // horizontal count
+    hc = Math.max(hc, 1);
+    hc = Math.min(type.count(), hc);
+    for (int i = 0; i < type.count()/hc; i++) {
       Node hl = v.n.ctx.make(v.r.gc.getProp("si.hlPart").gr());
       for (int j = 0; j < hc; j++) {
         Node fn = vl.ctx.make(vl.gc.getProp("si.numUI").gr());
@@ -38,15 +35,17 @@ public class TVar {
     BtnNode next = (BtnNode) n.ctx.id("ty");
     boolean binOpt = v.scalar || v.type.elBits()==1;
     next.setFn(b -> {
-      if (qual != TyRepr.FLOAT) {
-        switch (qual) {
-          case SIGNED:   qual = TyRepr.UNSIGNED; break;
-          case UNSIGNED: qual = TyRepr.HEX; break;
-          case HEX:      qual = binOpt? TyRepr.BIN : TyRepr.SIGNED; break;
-          case BIN:      qual =                      TyRepr.SIGNED; break;
+      TyRepr r = type.repr;
+      if (r != TyRepr.FLOAT) {
+        switch (r) {
+          case SIGNED:   r = TyRepr.UNSIGNED; break;
+          case UNSIGNED: r = v.type.widthBits()==1? TyRepr.SIGNED : TyRepr.HEX; break;
+          case HEX:      r = binOpt? TyRepr.BIN : TyRepr.SIGNED; break;
+          case BIN:      r = TyRepr.MASK; break;
+          case MASK:     r = TyRepr.SIGNED; break;
         }
-        v.updTitle();
-        updData();
+        v.types.set(v.types.indexOf(this), new TVar(v, type.withRepr(r)));
+        v.updList();
       }
     });
     nextText = n.ctx.id("tyTxt");
@@ -55,19 +54,19 @@ public class TVar {
   
   public void updData() {
     nextText.clearCh();
-    nextText.add(new StringNode(nextText.ctx, qual.repr));
-    long[] vs = v.read(elBits);
+    nextText.add(new StringNode(nextText.ctx, type.repr.fmt));
+    long[] vs = v.read(type.elBits());
     for (int i = 0; i < vs.length; i++) {
       EditNode n = fs.get(i);
       if (n == v.r.focusNode()) continue;
       long c = vs[i];
       String nv;
-      switch (qual) {
+      switch (type.repr) {
         case FLOAT:
-          nv = elBits==32? Float.toString(Float.intBitsToFloat((int) c)) : Double.toString(Double.longBitsToDouble(c));
+          nv = type.elBits()==32? Float.toString(Float.intBitsToFloat((int) c)) : Double.toString(Double.longBitsToDouble(c));
           break;
         case SIGNED:
-          int pad = 64-elBits;
+          int pad = 64-type.elBits();
           nv = Long.toString((c<<pad)>>pad);
           break;
         case UNSIGNED:
@@ -75,18 +74,18 @@ public class TVar {
           break;
         case HEX: {
           String s = Long.toHexString(c).toUpperCase();
-          nv = Tools.repeat('0', elBits/4 - s.length()) + s;
+          nv = Tools.repeat('0', (type.elBits()+3)/4 - s.length()) + s;
           break;
         }
-        case BIN: {
+        case BIN: case MASK: {
           String s = Long.toBinaryString(c);
-          s = Tools.repeat('0', elBits-s.length()) + s;
+          s = Tools.repeat('0', type.elBits()-s.length()) + s;
           StringBuilder b = new StringBuilder();
           for (int j = 0; j < s.length(); j+= 8) {
             if (j!=0) b.append("_");
-            b.append(s.substring(j, Math.min(s.length(), j+8)));
+            b.append(s, j, Math.min(s.length(), j+8));
           }
-          if (v.scalar) nv = b.toString();
+          if (type.repr==TyRepr.BIN) nv = b.toString();
           else nv = "m"+b.reverse();
           break;
         }
