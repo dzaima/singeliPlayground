@@ -21,7 +21,7 @@ ctrl+plus/ctrl+minus to change interface scale.
 
 `--file path/to/file.singeli` changes the primary file being edited and ran.
 
-`--layout path/to/layout.dzcfg` changes the file that stores the layout & configuration of tabs.
+`--layout path/to/layout.dzcfg` changes the file that stores the layout & configuration of tabs. `--read-layout` can be used to read the layout, but not update it.
 
 Flags `-a`/`--arch`, `-i`/`--infer`, `-l`/`--lib`, `-c`/`--config`, `-p`/`--pre`, `-n`/`--name` are passed on to Singeli invocations.
 

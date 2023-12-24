@@ -39,12 +39,13 @@ public class SiPlayground extends NodeWindow {
   public EditNode noteNode;
   
   private final VarList varsNode;
+  public final boolean layoutReadOnly;
   public final Node layoutPlace;
   public final Vec<Var> vars = new Vec<>();
   
   public final ConcurrentLinkedQueue<Runnable> toRun = new ConcurrentLinkedQueue<>();
   
-  public SiPlayground(GConfig gc, Ctx pctx, PNodeGroup g, String bqn, Path singeliPath, Vec<Pair<String,String>> singeliArgs, Path savePath, Path layoutPath, Path runnerPath) {
+  public SiPlayground(GConfig gc, Ctx pctx, PNodeGroup g, String bqn, Path singeliPath, Vec<Pair<String,String>> singeliArgs, Path savePath, Path layoutPath, boolean layoutReadOnly, Path runnerPath) {
     super(gc, pctx, g, new WindowInit("Singeli playground"));
     gc.langs().addLang("number", new NumLang());
     this.bqn = bqn;
@@ -53,6 +54,7 @@ public class SiPlayground extends NodeWindow {
     this.layoutPath = layoutPath;
     this.singeliArgs = singeliArgs;
     this.asmLang = gc.langs().fromName("x86 assembly");
+    this.layoutReadOnly = layoutReadOnly;
     
     Vec<String> argList = new Vec<>();
     for (Pair<String, String> c : singeliArgs) {
@@ -128,7 +130,7 @@ public class SiPlayground extends NodeWindow {
     for (SiTab t : allTabs()) {
       if (t instanceof SourceTab) ((SourceTab) t).save();
     }
-    Tools.writeFile(layoutPath, SerializableTab.serializeTree(layoutPlace.ch.get(0)));
+    if (!layoutReadOnly) Tools.writeFile(layoutPath, SerializableTab.serializeTree(layoutPlace.ch.get(0)));
   }
   public void run(ExecuterKey t) {
     if (!initialized) return;
@@ -214,6 +216,7 @@ public class SiPlayground extends NodeWindow {
       Path save = Paths.get("current.singeli");
       Path layout = Paths.get("layout_default.dzcfg");
       Path runner = null;
+      boolean layoutReadOnly = false;
       Vec<Pair<String,String>> singeliArgs = new Vec<>();
       for (int i = 0; i < args.length-2; ) {
         String c = args[i++];
@@ -229,6 +232,9 @@ public class SiPlayground extends NodeWindow {
             break;
           case "--file": save = Paths.get(args[i++]); break;
           case "--runner": runner = Paths.get(args[i++]); break;
+          case "--read-layout":
+            layoutReadOnly = true;
+            // fallthrough
           case "--layout": layout = Paths.get(args[i++]); break;
         }
       }
@@ -236,7 +242,7 @@ public class SiPlayground extends NodeWindow {
       SiPlayground w = new SiPlayground(
         gc, ctx, gc.getProp("si.ui").gr(),
         args[args.length-2], Paths.get(args[args.length-1]), singeliArgs,
-        save, layout, runner);
+        save, layout, layoutReadOnly, runner);
       mgr.start(w);
     });
   }
