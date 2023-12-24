@@ -7,10 +7,10 @@ public abstract class SiExecTab extends SiTab implements SiPlayground.ExecuterKe
     super(p);
   }
   
-  protected void onShow() {
+  public void onShown() {
     p.openTabs.add(this);
   }
-  public void hide() {
+  public void onHidden() {
     p.openTabs.remove(this);
   }
   

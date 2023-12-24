@@ -27,7 +27,6 @@ public class AsmTab extends SiExecTab {
   }
   
   public Node show() {
-    onShow();
     asmArea.removeAll();
     p.run(this);
     return node;

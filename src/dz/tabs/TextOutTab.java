@@ -21,7 +21,6 @@ public class TextOutTab extends SiExecTab {
   }
   
   public Node show() {
-    onShow();
     irArea.removeAll();
     p.run(this);
     return node;

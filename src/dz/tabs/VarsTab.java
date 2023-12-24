@@ -20,7 +20,6 @@ public class VarsTab extends SiExecTab {
   }
   
   public Node show() {
-    onShow();
     return node;
   }
   
