@@ -1,9 +1,9 @@
 package dz;
 
-import dzaima.ui.node.Solve;
 import dzaima.ui.node.ctx.Ctx;
 import dzaima.ui.node.prop.Props;
 import dzaima.ui.node.types.FrameNode;
+import dzaima.ui.node.utils.ListUtils;
 
 public class DividableNode extends FrameNode {
   public DividableNode(Ctx ctx, Props props) {
@@ -16,8 +16,8 @@ public class DividableNode extends FrameNode {
     pad = gc.lenD(this, "pad", 0);
   }
   
-  public int fillW() { return Solve.hMinW(ch); }
-  public int fillH(int w) { return Solve.hMinH(ch, w); }
+  public int fillW() { return ListUtils.hMinW(ch); }
+  public int fillH(int w) { return ListUtils.hMinH(ch, w); }
   
   protected void resized() {
     int n = ch.size();
