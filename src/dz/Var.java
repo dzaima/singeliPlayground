@@ -18,8 +18,7 @@ public class Var {
   public final Vec<TVar> types = new Vec<>();
   private final Vec<BtnNode> btns;
   private final Node nameNode;
-  private static final String[] BTN_KS = new String[]{"bg", "borderL"};
-  private static final Prop[] BTN_VS = new Prop[]{new ColProp(0), new ColProp(0)};
+  private static final Props BTN_PROPS = Props.keys("bg", "borderL").values(new ColProp(0), new ColProp(0));
   
   public Var(SiPlayground r, String name, byte[] data, SiType type) {
     this.r = r;
@@ -45,7 +44,7 @@ public class Var {
         int cw = Integer.parseInt(btnName.startsWith("f")? btnName.substring(1) : btnName);
         if (cw > type.widthBits()) continue;
       }
-      BtnNode b = new BtnNode(btnList.ctx, BTN_KS, BTN_VS);
+      BtnNode b = new BtnNode(btnList.ctx, BTN_PROPS);
       btnList.add(b);
       b.add(new StringNode(b.ctx, btnName));
       btns.add(b);
@@ -96,8 +95,8 @@ public class Var {
     Prop borderOn = n.gc.getProp("coloredBtn.borderLGreen");
     for (Node c : btns) {
       boolean has = tyNames.contains(((StringNode) c.ch.get(0)).s);
-      c.set(c.id("bg"), has? bgOn : bgOff);
-      c.set(c.id("borderL"), has? borderOn : borderOff);
+      c.setProp("bg", has? bgOn : bgOff);
+      c.setProp("borderL", has? borderOn : borderOff);
     }
   }
   public void updData() {

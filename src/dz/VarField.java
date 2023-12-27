@@ -3,15 +3,15 @@ package dz;
 import dzaima.ui.gui.io.*;
 import dzaima.ui.gui.undo.UndoFrame;
 import dzaima.ui.node.ctx.Ctx;
-import dzaima.ui.node.prop.Prop;
+import dzaima.ui.node.prop.*;
 import dzaima.ui.node.types.editable.code.CodeFieldNode;
 import dzaima.utils.Vec;
 
 public class VarField extends CodeFieldNode {
   public TVar tvar;
   
-  public VarField(Ctx ctx, String[] ks, Prop[] vs) {
-    super(ctx, ks, vs);
+  public VarField(Ctx ctx, Props props) {
+    super(ctx, props);
     setLang(gc.langs().fromName("number"));
   }
   

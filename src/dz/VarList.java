@@ -3,14 +3,14 @@ package dz;
 import dzaima.ui.gui.Graphics;
 import dzaima.ui.node.Node;
 import dzaima.ui.node.ctx.Ctx;
-import dzaima.ui.node.prop.Prop;
+import dzaima.ui.node.prop.*;
 import dzaima.ui.node.types.ReorderableNode;
 import dzaima.utils.Vec;
 
 public class VarList extends ReorderableNode {
   public SiPlayground r;
-  public VarList(Ctx ctx, String[] ks, Prop[] vs) {
-    super(ctx, ks, vs);
+  public VarList(Ctx ctx, Props props) {
+    super(ctx, props);
   }
   
   public void drawC(Graphics g) {

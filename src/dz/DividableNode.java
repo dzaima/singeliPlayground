@@ -1,13 +1,13 @@
 package dz;
 
-import dzaima.ui.node.*;
+import dzaima.ui.node.Solve;
 import dzaima.ui.node.ctx.Ctx;
-import dzaima.ui.node.prop.Prop;
+import dzaima.ui.node.prop.Props;
 import dzaima.ui.node.types.FrameNode;
 
 public class DividableNode extends FrameNode {
-  public DividableNode(Ctx ctx, String[] ks, Prop[] vs) {
-    super(ctx, ks, vs);
+  public DividableNode(Ctx ctx, Props props) {
+    super(ctx, props);
   }
   
   private int pad;
