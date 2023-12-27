@@ -15,8 +15,10 @@ si {
   
   varsUI = pad { u=0.5em l=0.5em
     scroll { x=off
-      varlist { pad=.7em dir=v mode=drag w=max
-        id=vars
+      pad { d=2em
+        varlist { pad=.7em dir=v mode=drag w=max
+          id=vars
+        }
       }
     }
   }
