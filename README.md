@@ -5,7 +5,7 @@
 Evalutes [Singeli](https://github.com/mlochbaum/Singeli) code in an interactive environment with viewable and modifiable vector variable watches.
 
 ### Usage
-1. Clone [Singeli](https://github.com/mlochbaum/Singeli)
+1. Build [CBQN](https://github.com/dzaima/CBQN), clone [Singeli](https://github.com/mlochbaum/Singeli)
 2. `./build.py`
 3. `./run cbqn path/to/Singeli`
 
