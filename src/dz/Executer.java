@@ -8,6 +8,7 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.atomic.*;
 import java.util.concurrent.locks.*;
+import java.util.function.Supplier;
 import java.util.regex.*;
 
 public abstract class Executer {
@@ -228,8 +229,11 @@ public abstract class Executer {
     o.write(stdin);
     o.flush();
     Executed r = new Executed();
-    r.outBytes = p.getInputStream().readAllBytes();
-    r.errBytes = p.getErrorStream().readAllBytes();
+    Supplier<byte[]> is = collectStream(p.getInputStream());
+    Supplier<byte[]> os = collectStream(p.getErrorStream());
+    
+    r.outBytes = is.get();
+    r.errBytes = os.get();
     r.out = new String(r.outBytes, StandardCharsets.UTF_8);
     r.err = new String(r.errBytes, StandardCharsets.UTF_8);
     r.code = p.waitFor();
@@ -237,6 +241,21 @@ public abstract class Executer {
   }
   protected void noteIfExitCode(Executed e) {
     if (e.code!=0) note("Exit code: "+e.code);
+  }
+  private Supplier<byte[]> collectStream(InputStream s) {
+    ByteVec v = new ByteVec();
+    Thread t = Tools.thread(() -> {
+      byte[] buf = new byte[16384];
+      try {
+        int n;
+        while ((n = s.read(buf, 0, buf.length)) != -1) v.addAll(buf, 0, n);
+      } catch (IOException e) { throw new RuntimeException(e); }
+    }, true);
+    return () -> {
+      try { t.join(); }
+      catch (InterruptedException ignored) { }
+      return v.get();
+    };
   }
   
   protected Executed compileSingeli(String src, boolean ir, boolean sink) throws Exception { // throws if failed
