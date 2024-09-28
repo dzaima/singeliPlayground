@@ -171,7 +171,13 @@ public class SiPlayground extends NodeWindow {
     if (n instanceof WindowSplitNode) {
       for (Node c : n.ch) collectRec(tabs, c);
     } else if (n instanceof TabbedNode) {
-      for (Tab t : Vec.of(((TabbedNode) n).getTabs())) tabs.add((SiTab)t);
+      for (Tab t : Vec.of(((TabbedNode) n).getTabs())) {
+        if (t instanceof TabbedNode.GroupTab) {
+          collectRec(tabs, ((TabbedNode.GroupTab)t).getContent());
+        } else {
+          tabs.add((SiTab)t);
+        }
+      }
     }
   }
   
