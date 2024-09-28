@@ -25,9 +25,9 @@ public class SourceTab extends SiTab {
     code.propsUpd();
     code.setLang(p.gc.langs().fromName("singeli"));
     
-    code.setFn(value -> {
-      if (value!=0) p.runAll();
-      return value!=0;
+    code.setFn((a,m) -> {
+      if (a.enter && m>0) p.runAll();
+      return a.enter && m>0;
     });
     
     

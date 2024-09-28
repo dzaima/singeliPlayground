@@ -247,8 +247,8 @@ public class SiPlayground extends NodeWindow {
     });
   }
   
-  public void resized(Surface s) {
-    super.resized(s);
+  public void resized() {
+    super.resized();
     if (varsNode!=null) varsNode.mResize();
   }
   

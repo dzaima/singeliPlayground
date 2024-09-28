@@ -169,7 +169,7 @@ public abstract class Executer {
   
   
   protected void notCanceled() {
-    if (canceled.get()) throw new Tools.QInterruptedException();
+    if (canceled.get()) throw Tools.makeQuietInterrupted(new InterruptedException());
   }
   
   protected Process exec(String[] args) throws IOException {

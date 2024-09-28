@@ -21,12 +21,12 @@ public class VarField extends CodeFieldNode {
     super.tickC();
     if (um.us.peek()!=pFrame || isFocused!=pFocused) {
       pFrame = um.us.peek();
-      enter(Key.M_CTRL);
+      action(EditAction.CUSTOM1, 0);
       pFocused = isFocused;
     }
   }
   
-  public boolean enter(int mod) {
+  public boolean action(EditAction a, int mod) {
     long[] vs = new long[tvar.type.count()];
     for (int j = 0; j < tvar.type.count(); j++) {
       String s = tvar.fs.get(j).getAll().replace("_","");
