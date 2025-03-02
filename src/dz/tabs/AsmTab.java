@@ -67,7 +67,12 @@ public class AsmTab extends SiExecTab {
         compileC(cmd, "-o", asm.toString(), "-S", c.toString());
         String asmSrc = Tools.readFile(asm);
         
-        String fmt = AsmFormatter.formatAsm(cSrc, asmSrc);
+        String fmt;
+        if (Vec.of(cmd).some(x -> x.equals("-emit-llvm"))) {
+          fmt = asmSrc;
+        } else {
+          fmt = AsmFormatter.formatAsm(cSrc, asmSrc);
+        }
         p.toRun.add(() -> TextOutTab.setContents(asmArea, fmt));
       }
     };
