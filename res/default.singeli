@@ -1,9 +1,9 @@
 include 'skin/c'
 include 'skin/cext'
 include 'arch/c'
-if (hasarch{'X86_64'}) {
+if_inline (hasarch{'X86_64'}) {
   include 'arch/iintrinsic/basic'
-} else if (hasarch{'AARCH64'}) {
+} else if_inline (hasarch{'AARCH64'}) {
   include 'arch/neon_intrin/basic'
 }
 
