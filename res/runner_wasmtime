@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+clang -o "$3" -O1 -msimd128 -mrelaxed-simd "$1" > "$2" && \
+wasmtime -W relaxed-simd-deterministic=no "$3"
