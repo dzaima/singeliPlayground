@@ -16,3 +16,5 @@ __pycache__
 /current.singeli
 /layout_*.dzcfg
 perf.data*
+
+local.dzcfg
