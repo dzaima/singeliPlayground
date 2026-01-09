@@ -12,6 +12,8 @@ public abstract class SiTab extends Tab implements SerializableTab {
     this.p = p;
   }
   
+  public /*open*/ void updLang() { }
+  
   public void onRightClick(Click cl) {
     PartialMenu m = new PartialMenu(p.gc);
     preMenuOptions(m);

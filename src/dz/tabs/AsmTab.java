@@ -23,6 +23,10 @@ public class AsmTab extends SiExecTab {
     command.append(flags);
     
     asmArea = (CodeAreaNode) node.ctx.id("asm");
+    updLang();
+  }
+  
+  public void updLang() {
     asmArea.setLang(p.asmLang);
   }
   

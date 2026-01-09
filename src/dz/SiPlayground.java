@@ -99,7 +99,7 @@ public class SiPlayground extends NodeWindow {
     run((code, onDone) -> new Executer(SiPlayground.this, "each{show,listarch{}}", () -> {
       onDone.run();
       asmLang = gc.langs().fromName(lang.get());
-      for (SiTab tab : allTabs()) if (tab instanceof AsmTab) ((AsmTab) tab).asmArea.setLang(asmLang);
+      for (SiTab tab : allTabs()) tab.updLang();
     }) {
       protected void onThread() throws Exception {
         status("detecting architecture...");
