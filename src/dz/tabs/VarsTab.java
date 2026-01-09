@@ -43,7 +43,7 @@ public class VarsTab extends SiExecTab {
         
         Executed t;
         
-        Path tc = tmpFile(".c");
+        Path tc = tmpFile(p.cpp? ".cpp" : ".c");
         Tools.writeFile(tc, pre.c+"\n"+o.custom);
         
         ByteVec in = new ByteVec();
@@ -51,7 +51,7 @@ public class VarsTab extends SiExecTab {
         
         if (runner==null) {
           Path exe = tmpFile(".out");
-          compileC("cc", "-march=native", "-O1", "-o", exe.toString(), tc.toString());
+          compileC(p.cpp? "c++" : "cc", "-march=native", "-O1", "-o", exe.toString(), tc.toString());
           
           status("Running binary...");
           t = execCollect(new String[]{exe.toString()}, in.get());

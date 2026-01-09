@@ -270,7 +270,8 @@ public abstract class Executer {
     for (String c : siArgs) cmd.add(c);
     cmd.add("-o");
     cmd.add(tmpOut.toString());
-    if (ir)   { cmd.add("-t"); cmd.add("ir"); }
+    if (ir)         { cmd.add("-t"); cmd.add("ir"); }
+    else if (r.cpp) { cmd.add("-t"); cmd.add("cpp"); }
     if (sink) { cmd.add("-c"); cmd.add("_playground_displaySink=1"); }
     cmd.add(tmpIn.toString());
     Executed r = execCollect(cmd.toArray(new String[0]), new byte[0]);

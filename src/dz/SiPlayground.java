@@ -31,6 +31,7 @@ public class SiPlayground extends NodeWindow {
   public Path singeliPath;
   public final String[] singeliArgList;
   public final Vec<Pair<String,String>> singeliArgs;
+  public final boolean cpp;
   public Path execTmp = Paths.get("exec/");
   public Lang asmLang;
   
@@ -45,10 +46,11 @@ public class SiPlayground extends NodeWindow {
   
   public final ConcurrentLinkedQueue<Runnable> toRun = new ConcurrentLinkedQueue<>();
   
-  public SiPlayground(GConfig gc, Ctx pctx, PNodeGroup g, String bqn, Path singeliPath, Vec<Pair<String,String>> singeliArgs, Path savePath, Path layoutPath, boolean layoutReadOnly, Path runnerPath) {
+  public SiPlayground(GConfig gc, Ctx pctx, PNodeGroup g, String bqn, Path singeliPath, Vec<Pair<String,String>> singeliArgs, boolean cpp, Path savePath, Path layoutPath, boolean layoutReadOnly, Path runnerPath) {
     super(gc, pctx, g, new WindowInit("Singeli playground"));
     gc.langs().addLang("number", new NumLang());
     this.bqn = bqn;
+    this.cpp = cpp;
     this.singeliPath = Files.isDirectory(singeliPath)? singeliPath.resolve("singeli") : singeliPath;
     this.runnerPath = runnerPath;
     this.layoutPath = layoutPath;
@@ -223,6 +225,7 @@ public class SiPlayground extends NodeWindow {
       Path layout = Paths.get("layout_default.dzcfg");
       Path runner = null;
       boolean layoutReadOnly = false;
+      boolean cpp = false;
       Vec<Pair<String,String>> singeliArgs = new Vec<>();
       for (int i = 0; i < args.length-2; ) {
         String c = args[i++];
@@ -236,6 +239,7 @@ public class SiPlayground extends NodeWindow {
             case "-n": case "--name":
             singeliArgs.add(new Pair<>(c, args[i++]));
             break;
+          case "--cpp": cpp = true; break;
           case "--file": save = Paths.get(args[i++]); break;
           case "--runner": runner = Paths.get(args[i++]); break;
           case "--read-layout":
@@ -247,7 +251,7 @@ public class SiPlayground extends NodeWindow {
       
       SiPlayground w = new SiPlayground(
         gc, ctx, gc.getProp("si.ui").gr(),
-        args[args.length-2], Paths.get(args[args.length-1]), singeliArgs,
+        args[args.length-2], Paths.get(args[args.length-1]), singeliArgs, cpp,
         save, layout, layoutReadOnly, runner);
       mgr.start(w);
     });
