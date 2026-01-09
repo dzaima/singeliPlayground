@@ -137,7 +137,7 @@ public abstract class Executer {
         while (m.find()) {
           String name = m.group(1);
           if (name==null) {
-            m.appendReplacement(curr, m.group());
+            m.appendReplacement(curr, Matcher.quoteReplacement(m.group()));
             continue;
           }
           boolean onlyFirst = m.group(2).equals(":");
@@ -150,11 +150,11 @@ public abstract class Executer {
             return newMap.size();
           });
           
-          m.appendReplacement(curr,
+          m.appendReplacement(curr, Matcher.quoteReplacement(
             onlyFirst && !isNew? "@_playground_dontRun("+name+") " :
             mod || !isNew? "@_playground_varUpd(tup{"+name+","+siQuote(name)+"}) " :
             name+" := @_playground_varSet("+siQuote(name)+") "
-          );
+          ));
         }
         m.appendTail(curr);
       }
