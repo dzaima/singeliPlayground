@@ -2,14 +2,27 @@ include 'debug/printf'
 if (hasarch{'RVV'}) require{'riscv_vector.h'}
 config _playground_displaySink = 0
 
-def _playground_scale{} = if (hasarch{'RVV'}) __div{emit{u32, '__riscv_vlenb'},16} else 1
-def _playground_err{...a} = { show{merge{...a}}; ({}=>0){0} }
-def _playground_bytes{T, scale} = __shr{__add{__mul{width{T},scale}, 7}, 3}
+local def _playground_cshr{a,n} = __shr{__add{a, __sub{__shl{1,n},1}},n}
 
-def _playground_typed{v} = __or{is{kind{v},'constant'}, is{kind{v},'register'}}
+local def _playground_scale_scalable{T, s} = {
+  def b16 = emit{u32, s} # number of bytes in a scale-1 virtual-16-byte vector
+  def w0 = width{T}
+  def w = if (hasarch{'SVE'} and is{eltype{T},u1}) 16 else w0
+  def bytes = if (__eq{w,128}) b16
+  else if (__gt{w,128}) __mul{b16, __div{w,128}}
+  else if (__ge{w,8}) __div{b16, __div{128,w}}
+  else _playground_cshr{__mul{b16,w}, 7}
+  tup{__mul{__shr{b16,4}, __div{w,w0}}, bytes}
+}
+
+local def _playground_scale{T} = tup{1, _playground_cshr{width{T},3}}
+local def _playground_scale{T if is{typekind{T},'vector'} and hasarch{'RVV'}} = _playground_scale_scalable{T, '__riscv_vlenb'}
+local def _playground_scale{T if is{typekind{T},'vector'} and hasarch{'SVE'}} = _playground_scale_scalable{T, 'svcntb'}
+local def _playground_err{...a} = { show{merge{...a}}; ({}=>0){0} }
+
 def _playground_display{name, r} = {
   def printf{s, ...v} = emit{void, 'fprintf', 'stderr', merge{'"',s,'"'}, ...v}
-  if (not _playground_typed{r}) _playground_err{'Cannot display value with kind ', kind{r}}
+  if (not hastype{r}) _playground_err{'Cannot display value with kind ', kind{r}}
   def T = type{r}
   
   def printType{C} = match (typekind{C}) {
@@ -18,9 +31,7 @@ def _playground_display{name, r} = {
     {_} => _playground_err{'Cannot display value with typekind ', typekind{T}}
   }
   
-  def scale = if (is{typekind{T},'vector'}) _playground_scale{} else 1
-  
-  def bytes = _playground_bytes{T, scale}
+  def {scale,bytes} = _playground_scale{T}
   
   if (_playground_displaySink) {
     emit{void, '_playground_sink', r}
@@ -34,6 +45,7 @@ def _playground_display{name, r} = {
   
   r
 }
+def _playground_display{n, {...t}} = each{{v,i} => _playground_display{merge{n,'.',fmtnat{i}}, v}, t, range{length{t}}}
 
 def _playground_dontRun{vars,_,arg,iter} = arg
 def _playground_varSet{vars,_,name,iter} = {
@@ -41,15 +53,16 @@ def _playground_varSet{vars,_,name,iter} = {
 }
 def _playground_varUpd{vars,_,{reg,name},iter} = {
   def v = iter{0,vars}
-  if (_playground_typed{reg} and _playground_typed{v} and not is{type{reg}, type{v}}) _playground_err{'Type changed of', ' variable "',name,'"'}
+  if (hastype{reg} and hastype{v} and not is{type{reg}, type{v}}) _playground_err{'Type changed of', ' variable "',name,'"'}
   reg = _playground_display{name, cast{type{reg}, v}}
 }
 
 def _playground_load{T} = {
   r:=undefined{T}
   def rPtr = emit{__pnt{void}, '&', r}
-  emit{void, 'fread', rPtr, 1, _playground_bytes{T, _playground_scale{}}, 'stdin'}
+  def {scale,bytes} = _playground_scale{T}
+  emit{void, 'fread', rPtr, 1, bytes, 'stdin'}
   r
 }
 
-def display{name, v} = @_playground_varSet(name) v
+def display{name, v} = _playground_display{name, v}
